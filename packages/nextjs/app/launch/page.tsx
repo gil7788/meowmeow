@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Cat, ArrowLeft } from "lucide-react"
+import { ArrowLeft, Cat } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,31 +9,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export default function SubmitPage() {
+export default function LaunchPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-background/90">
-      <header className="px-4 lg:px-6 h-14 flex items-center border-b">
-        <div className="container mx-auto max-w-5xl flex items-center justify-between w-full">
-          <Link className="flex items-center justify-center" href="/">
-            <Cat className="h-6 w-6 text-primary" />
-            <span className="ml-2 text-xl font-bold">MeowMoew Pad</span>
-          </Link>
-          <div className="flex items-center">
-            <nav className="flex gap-4 sm:gap-6 mr-4">
-              <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-                Launches
-              </Link>
-              <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-                Projects
-              </Link>
-              <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-                Learn
-              </Link>
-            </nav>
-            <Button>Connect Wallet</Button>
-          </div>
-        </div>
-      </header>
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
           <div className="mb-8">
