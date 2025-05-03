@@ -1,11 +1,11 @@
-import Link from "next/link"
-import { ArrowRight, Calendar, Clock, ExternalLink, Globe, Shield } from "lucide-react"
-
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { CountdownTimer } from "@/components/countdown-timer"
+import Image from "next/image";
+import Link from "next/link";
+import { CountdownTimer } from "@/components/countdown-timer";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ArrowRight, Calendar, Clock, ExternalLink, Globe, Shield } from "lucide-react";
 
 export function FeaturedLaunch() {
   // This would normally come from a database or API
@@ -23,19 +23,25 @@ export function FeaturedLaunch() {
     website: "https://meowzircuit.example",
     whitepaper: "https://meowzircuit.example/whitepaper",
     audit: "Audited by CertiK",
-  }
+  };
 
   // Format date in a consistent way for both server and client
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
-  }
+    const date = new Date(dateString);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  };
 
   return (
     <Card className="overflow-hidden">
       <div className="grid md:grid-cols-2">
         <div className="p-6 flex items-center justify-center bg-muted/50">
-          <img src={project.image || "/placeholder.svg"} alt={project.name} className="w-full max-w-[300px] h-auto" />
+          <Image
+            src={`/coin_placeholder.svg`}
+            alt={project.name}
+            width={40}
+            height={40}
+            className="w-full h-full object-cover"
+          />
         </div>
         <CardContent className="p-6 space-y-6">
           <div className="space-y-2">
@@ -112,5 +118,5 @@ export function FeaturedLaunch() {
         </CardContent>
       </div>
     </Card>
-  )
+  );
 }

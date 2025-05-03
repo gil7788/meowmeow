@@ -1,22 +1,22 @@
-import Link from "next/link"
-import { CalendarClock } from "lucide-react"
-
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import Image from "next/image";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { CalendarClock } from "lucide-react";
 
 interface LaunchCardProps {
-  id: string
-  name: string
-  description: string
-  image: string
-  raised: string
-  goal: string
-  progress: number
-  startDate: string
-  endDate: string
-  status: "upcoming" | "live" | "completed"
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  raised: string;
+  goal: string;
+  progress: number;
+  startDate: string;
+  endDate: string;
+  status: "upcoming" | "live" | "completed";
 }
 
 export function LaunchCard({
@@ -38,33 +38,39 @@ export function LaunchCard({
           <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
             Upcoming
           </Badge>
-        )
+        );
       case "live":
         return (
           <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
             Live
           </Badge>
-        )
+        );
       case "completed":
         return (
           <Badge variant="outline" className="bg-gray-500/10 text-gray-500 border-gray-500/20">
             Completed
           </Badge>
-        )
+        );
     }
-  }
+  };
 
   // Format date in a consistent way for both server and client
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
-  }
+    const date = new Date(dateString);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  };
 
   return (
     <Card className="overflow-hidden">
       <CardHeader className="p-0">
         <div className="relative">
-          <img src={image || "/placeholder.svg"} alt={name} className="w-full h-48 object-cover" />
+          <Image
+            src={image || "/placeholder.svg"}
+            width={40}
+            height={40}
+            alt={name}
+            className="w-full h-48 object-cover"
+          />
           <div className="absolute top-2 right-2">{getStatusBadge()}</div>
         </div>
       </CardHeader>
@@ -102,5 +108,5 @@ export function LaunchCard({
         </Link>
       </CardFooter>
     </Card>
-  )
+  );
 }

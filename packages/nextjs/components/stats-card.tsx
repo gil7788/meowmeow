@@ -1,12 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface StatsCardProps {
-  title: string
-  value: string
-  change: string
-  icon: ReactNode
-  positive: boolean
+  title: string;
+  value: string;
+  change: string;
+  icon: ReactNode;
+  positive: boolean;
 }
 
 export function StatsCard({ title, value, change, icon, positive }: StatsCardProps) {
@@ -21,5 +21,5 @@ export function StatsCard({ title, value, change, icon, positive }: StatsCardPro
         <p className={`text-xs ${positive ? "text-green-500" : "text-red-500"} flex items-center mt-1`}>{change}</p>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,13 +1,12 @@
-import Link from "next/link"
-import { ArrowLeft, Cat } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Cat } from "lucide-react";
 
 export default function LaunchPage() {
   return (
@@ -72,7 +71,7 @@ export default function LaunchPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Tokenomics</CardTitle>
-                <CardDescription>Provide details about your token's economics and distribution.</CardDescription>
+                <CardDescription>Provide details about your token&apos;s economics and distribution.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -221,5 +220,5 @@ export default function LaunchPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

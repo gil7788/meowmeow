@@ -1,14 +1,14 @@
-import Link from "next/link"
-import { Calendar, Clock, ExternalLink, Globe, Shield, Users, Cat } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CountdownTimer } from "@/components/countdown-timer"
-import { ProjectTeam } from "@/components/project-team"
-import { TokenAllocation } from "@/components/token-allocation"
+import Image from "next/image";
+import Link from "next/link";
+import { CountdownTimer } from "@/components/countdown-timer";
+import { ProjectTeam } from "@/components/project-team";
+import { TokenAllocation } from "@/components/token-allocation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Calendar, Clock, ExternalLink, Globe, Shield, Users } from "lucide-react";
 
 // This would normally come from a database or API
 const getProjectData = (id: string) => {
@@ -56,24 +56,29 @@ const getProjectData = (id: string) => {
       { name: "Charity", percentage: 10 },
     ],
     audit: "Audited by CertiK",
-  }
-}
+  };
+};
 
 // Format date in a consistent way for both server and client
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
-}
+  const date = new Date(dateString);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
+type PageProps = {
+  params: {
+    id: string;
+  };
+};
 
-export default function ProjectPage({ params }: { params: { id: string } }) {
-  const project = getProjectData(params.id)
+export default function ProjectPage({ params }: PageProps) {
+  const project = getProjectData(params.id);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-background/90">
       <header className="px-4 lg:px-6 h-14 flex items-center border-b">
         <div className="container mx-auto max-w-5xl w-full">
           <Link href="/" className="flex items-center gap-2 text-sm font-medium">
-            <Cat className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Launches
           </Link>
         </div>
@@ -84,9 +89,11 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
             <div className="md:col-span-2 space-y-8">
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                  <img
-                    src={project.image || "/placeholder.svg"}
+                  <Image
+                    src={`/coin_placeholder.svg`}
                     alt={project.name}
+                    width={30}
+                    height={30}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -313,5 +320,5 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
         </div>
       </footer>
     </div>
-  )
+  );
 }

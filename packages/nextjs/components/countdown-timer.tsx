@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 interface CountdownTimerProps {
-  targetDate: string
+  targetDate: string;
 }
 
 export function CountdownTimer({ targetDate }: CountdownTimerProps) {
@@ -13,16 +13,16 @@ export function CountdownTimer({ targetDate }: CountdownTimerProps) {
     hours: 0,
     minutes: 0,
     seconds: 0,
-  })
+  });
 
   // Only start the timer on the client side
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
+    setMounted(true);
 
     const calculateTimeLeft = () => {
-      const difference = new Date(targetDate).getTime() - Date.now()
+      const difference = new Date(targetDate).getTime() - Date.now();
 
       if (difference <= 0) {
         return {
@@ -30,7 +30,7 @@ export function CountdownTimer({ targetDate }: CountdownTimerProps) {
           hours: 0,
           minutes: 0,
           seconds: 0,
-        }
+        };
       }
 
       return {
@@ -38,19 +38,19 @@ export function CountdownTimer({ targetDate }: CountdownTimerProps) {
         hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
         minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
         seconds: Math.floor((difference % (1000 * 60)) / 1000),
-      }
-    }
+      };
+    };
 
     if (mounted) {
-      setTimeLeft(calculateTimeLeft())
+      setTimeLeft(calculateTimeLeft());
 
       const timer = setInterval(() => {
-        setTimeLeft(calculateTimeLeft())
-      }, 1000)
+        setTimeLeft(calculateTimeLeft());
+      }, 1000);
 
-      return () => clearInterval(timer)
+      return () => clearInterval(timer);
     }
-  }, [targetDate, mounted])
+  }, [targetDate, mounted]);
 
   return (
     <div className="grid grid-cols-4 gap-2 text-center" suppressHydrationWarning>
@@ -71,5 +71,5 @@ export function CountdownTimer({ targetDate }: CountdownTimerProps) {
         <div className="text-xs text-muted-foreground">Secs</div>
       </div>
     </div>
-  )
+  );
 }

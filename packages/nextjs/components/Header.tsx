@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Cat } from "lucide-react";
 import { hardhat } from "viem/chains";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
-import { Cat } from "lucide-react"
 
 type HeaderMenuLink = {
   label: string;
@@ -23,7 +22,7 @@ export const menuLinks: HeaderMenuLink[] = [
   },
   {
     label: "Launch",
-    href: "/launch"
+    href: "/launch",
   },
   {
     label: "Debug Contracts",
@@ -32,29 +31,27 @@ export const menuLinks: HeaderMenuLink[] = [
   },
 ];
 
+// <header className="px-4 lg:px-6 h-14 flex items-center border-b">
+//   <div className="container mx-auto max-w-5xl flex items-center justify-between w-full">
+//     <Link className="flex items-center justify-center" href="/">
 
+//     </Link>
+//     <div className="flex items-center">
+//       <nav className="flex gap-4 sm:gap-6 mr-4">
+//         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
+//           Launches
+//         </Link>
+//         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
+//           Projects
+//         </Link>
+//         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
+//           Learn
+//         </Link>
+//       </nav>
 
-      // <header className="px-4 lg:px-6 h-14 flex items-center border-b">
-      //   <div className="container mx-auto max-w-5xl flex items-center justify-between w-full">
-      //     <Link className="flex items-center justify-center" href="/">
-            
-      //     </Link>
-      //     <div className="flex items-center">
-      //       <nav className="flex gap-4 sm:gap-6 mr-4">
-      //         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-      //           Launches
-      //         </Link>
-      //         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-      //           Projects
-      //         </Link>
-      //         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-      //           Learn
-      //         </Link>
-      //       </nav>
-            
-      //     </div>
-      //   </div>
-      // </header>
+//     </div>
+//   </div>
+// </header>
 
 export const HeaderMenuLinks = () => {
   const pathname = usePathname();
@@ -123,9 +120,7 @@ export const Header = () => {
         </div>
         <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
           <div className="flex relative w-10 h-10">
-            {/* <Image alt="SE2 logo" className="cursor-pointer" fill src="/logo.svg" /> */}
             <Cat className="h-12 w-12 text-primary" />
-            
           </div>
           <div className="flex flex-col">
             {/* <span className="font-bold leading-tight">Scaffold-ETH</span>
