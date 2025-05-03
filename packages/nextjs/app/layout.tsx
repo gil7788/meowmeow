@@ -8,9 +8,9 @@ export const metadata = getMetadata({ title: "Scaffold-ETH 2 App", description: 
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   return (
-    <html lang="en" data-theme="data-theme" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider enableSystem={false} attribute="data-theme">
+        <ThemeProvider defaultTheme="light" enableSystem={false} attribute="data-theme">
           <ScaffoldEthAppWithProviders>{children}</ScaffoldEthAppWithProviders>
         </ThemeProvider>
       </body>
