@@ -72,11 +72,15 @@
     "@radix-ui/react-toast": "^1.2.11",
     "@radix-ui/react-toggle": "^1.1.6",
     "@radix-ui/react-toggle-group": "^1.1.7",
+    "@types/node": "^22.15.3",
     "husky": "~9.1.6",
     "lint-staged": "~13.2.2"
   },
   "packageManager": "yarn@3.2.3",
   "engines": {
     "node": ">=20.18.3"
+  },
+  "dependencies": {
+    "ethers": "^6.13.7"
   }
 }

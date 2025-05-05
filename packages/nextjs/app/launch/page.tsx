@@ -1,14 +1,174 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { id as keccak256, toUtf8Bytes } from "ethers";
 import { ArrowLeft, Cat } from "lucide-react";
+import { decodeEventLog } from "viem";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { encodeBase64 } from "~~/utils/encoderBase64";
+
+// import type { Address } from "viem";
+
+// [TODO] Move to a config file
+const FACTORY_ADDRESS = "0xa15bb66138824a1c7167f5e85b957d04dd34e468";
+
+class TokenCreatedEvent {
+  creator: string;
+  tokenAddress: string;
+  name: string;
+  symbol: string;
+  description: string;
+  image: string;
+  keccak256Hash: string;
+  timestamp: number;
+
+  constructor(
+    creator: string,
+    tokenAddress: string,
+    name: string,
+    symbol: string,
+    description: string,
+    image?: string, // base64
+  ) {
+    this.creator = creator;
+    this.tokenAddress = tokenAddress;
+    this.name = name;
+    this.symbol = symbol;
+    this.description = description;
+    this.image = image ?? "none";
+    this.timestamp = Date.now();
+
+    const dataToHash = `${creator}:${tokenAddress}:${name}:${symbol}:${description}:${this.image}`;
+    this.keccak256Hash = keccak256(`0x${Buffer.from(toUtf8Bytes(dataToHash)).toString("hex")}`);
+  }
+
+  static readonly abi = [
+    {
+      type: "event",
+      name: "TokenCreated",
+      inputs: [
+        { name: "creator", type: "address", indexed: true },
+        { name: "tokenAddress", type: "address", indexed: false },
+        { name: "name", type: "string", indexed: false },
+        { name: "symbol", type: "string", indexed: false },
+        { name: "description", type: "string", indexed: false },
+        { name: "image", type: "string", indexed: false },
+      ],
+      anonymous: false,
+    },
+  ] as const;
+}
+
+function parseTokenCreatedEvent(decodedArgs: unknown): TokenCreatedEvent | null {
+  if (typeof decodedArgs === "object" && decodedArgs !== null && !Array.isArray(decodedArgs)) {
+    const obj = decodedArgs as Record<string, unknown>;
+    for (const input of TokenCreatedEvent.abi[0].inputs) {
+      if (typeof obj[input.name] !== "string") {
+        throw new Error(
+          `Invalid event arg ${input.name}: expected type ${input.type}, instead got ${typeof obj[input.name]}`,
+        );
+      }
+    }
+
+    const image = typeof obj.image === "string" ? obj.image : "";
+
+    return new TokenCreatedEvent(
+      obj.creator as string,
+      obj.tokenAddress as string,
+      obj.name as string,
+      obj.symbol as string,
+      obj.description as string,
+      image as string,
+    );
+  }
+  throw new Error("Invalid event args: one or more required fields are missing");
+}
 
 export default function LaunchPage() {
+  const [name, setName] = useState("");
+  const [symbol, setSymbol] = useState("");
+  const [description, setDescription] = useState("");
+  const [logo, setLogo] = useState<File | null>(null);
+  const router = useRouter();
+  const { writeContractAsync, isPending } = useScaffoldWriteContract("MemeCoinFactory");
+
+  function resetForm() {
+    setName("");
+    setSymbol("");
+    setDescription("");
+    setLogo(null);
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const logoBase64 = await encodeBase64(logo);
+      const eventSignature = "TokenCreated(address,address,string,string,string,string)";
+      const TOKEN_CREATED_EVENT_SIG = keccak256(eventSignature);
+
+      await writeContractAsync(
+        {
+          functionName: "mintNewToken",
+          args: [name, symbol, description, logoBase64],
+        },
+        {
+          onBlockConfirmation: txnReceipt => {
+            let found = false;
+
+            for (const log of txnReceipt.logs) {
+              if (
+                log.address?.toLowerCase() !== FACTORY_ADDRESS.toLowerCase() ||
+                log.topics[0] !== TOKEN_CREATED_EVENT_SIG
+              ) {
+                continue;
+              }
+
+              try {
+                const decoded = decodeEventLog({
+                  abi: TokenCreatedEvent.abi,
+                  data: log.data,
+                  topics: log.topics,
+                });
+
+                const event = parseTokenCreatedEvent(decoded.args);
+                if (event) {
+                  console.debug("Token hash:", event.keccak256Hash);
+                  console.debug("Timestamp:", new Date(event.timestamp).toISOString());
+
+                  localStorage.setItem(`token-${event.keccak256Hash}`, JSON.stringify(event));
+                  router.push(`/meme/${event.keccak256Hash}`);
+
+                  found = true;
+                  break;
+                }
+              } catch (error) {
+                console.error("Failed to decode event log:", error);
+              }
+            }
+
+            if (!found) {
+              console.error(
+                "Token launched, but could not find token address in logs. Make sure FACTORY_ADDRESS is correct and contract emits the event.",
+              );
+            }
+          },
+        },
+      );
+
+      resetForm();
+    } catch (err) {
+      console.error("Error submitting meme coin:", (err as Error).message);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-background/90">
       <main className="flex-1 py-12">
@@ -27,7 +187,7 @@ export default function LaunchPage() {
             </p>
           </div>
 
-          <form className="space-y-8">
+          <form className="space-y-8" onSubmit={handleSubmit}>
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
@@ -37,11 +197,23 @@ export default function LaunchPage() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Coin Name</Label>
-                    <Input id="name" placeholder="e.g. MeowZircuit" required />
+                    <Input
+                      id="name"
+                      placeholder="e.g. MeowZircuit"
+                      required
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="symbol">Token Symbol</Label>
-                    <Input id="symbol" placeholder="e.g. MEOW" required />
+                    <Input
+                      id="symbol"
+                      placeholder="e.g. MEOW"
+                      required
+                      value={symbol}
+                      onChange={e => setSymbol(e.target.value)}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -51,6 +223,8 @@ export default function LaunchPage() {
                     placeholder="A brief description of your meme coin (max 150 characters)"
                     className="resize-none"
                     required
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -59,149 +233,23 @@ export default function LaunchPage() {
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                       <Cat className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <Input id="logo" type="file" accept="image/*" className="flex-1" required />
+                    <Input
+                      id="logo"
+                      type="file"
+                      accept="image/*"
+                      className="flex-1"
+                      required
+                      onChange={e => setLogo(e.target.files?.[0] || null)}
+                    />
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Upload a square image (recommended: 512x512px, max 2MB)
                   </p>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Tokenomics</CardTitle>
-                <CardDescription>Provide details about your token&apos;s economics and distribution.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="total-supply">Total Supply</Label>
-                    <Input id="total-supply" placeholder="e.g. 1,000,000,000" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="initial-price">Initial Token Price (USD)</Label>
-                    <Input id="initial-price" placeholder="e.g. 0.000042" required />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="sale-allocation">Public Sale Allocation (%)</Label>
-                    <Input id="sale-allocation" placeholder="e.g. 40" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="liquidity-allocation">Liquidity Allocation (%)</Label>
-                    <Input id="liquidity-allocation" placeholder="e.g. 20" required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tokenomics">Additional Tokenomics</Label>
-                  <Textarea
-                    id="tokenomics"
-                    placeholder="Describe any additional tokenomics features (e.g., reflection, burn mechanism, etc.)"
-                    className="resize-none"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Details</CardTitle>
-                <CardDescription>Tell us more about your project and its goals.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="website">Website</Label>
-                    <Input id="website" placeholder="https://" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="whitepaper">Whitepaper URL</Label>
-                    <Input id="whitepaper" placeholder="https://" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="twitter">Twitter</Label>
-                    <Input id="twitter" placeholder="https://twitter.com/" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="telegram">Telegram</Label>
-                    <Input id="telegram" placeholder="https://t.me/" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select>
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="animal">Animal Meme</SelectItem>
-                      <SelectItem value="character">Character Meme</SelectItem>
-                      <SelectItem value="food">Food Meme</SelectItem>
-                      <SelectItem value="internet">Internet Culture</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="long-description">Project Description</Label>
-                  <Textarea
-                    id="long-description"
-                    placeholder="Provide a detailed description of your project, its goals, and why it's unique"
-                    className="min-h-[120px]"
-                    required
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Launch Details</CardTitle>
-                <CardDescription>Specify your desired launch parameters.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="funding-goal">Funding Goal (USD)</Label>
-                    <Input id="funding-goal" placeholder="e.g. 50000" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Launch Duration (Days)</Label>
-                    <Select>
-                      <SelectTrigger id="duration">
-                        <SelectValue placeholder="Select duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="7">7 days</SelectItem>
-                        <SelectItem value="14">14 days</SelectItem>
-                        <SelectItem value="21">21 days</SelectItem>
-                        <SelectItem value="30">30 days</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col space-y-4">
-                <Separator />
-                <div className="text-sm text-muted-foreground">
-                  By submitting this form, you agree to our{" "}
-                  <Link href="#" className="underline underline-offset-4 hover:text-primary">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="#" className="underline underline-offset-4 hover:text-primary">
-                    Launch Guidelines
-                  </Link>
-                  .
-                </div>
-                <Button type="submit" className="w-full">
-                  Submit Meme Coin
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? "Submitting..." : "Submit Meme Coin"}
                 </Button>
-              </CardFooter>
+              </CardContent>
             </Card>
           </form>
         </div>
