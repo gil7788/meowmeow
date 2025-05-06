@@ -8,63 +8,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { id as keccak256, toUtf8Bytes } from "ethers";
+import { id as keccak256 } from "ethers";
 import { ArrowLeft, Cat } from "lucide-react";
 import { decodeEventLog } from "viem";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { tokenEventQueue } from "~~/lib/memoryQueue";
+import { TokenCreatedEvent } from "~~/lib/types";
 import { encodeBase64 } from "~~/utils/encoderBase64";
 
 // import type { Address } from "viem";
 
 // [TODO] Move to a config file
 const FACTORY_ADDRESS = "0xa15bb66138824a1c7167f5e85b957d04dd34e468";
-
-class TokenCreatedEvent {
-  creator: string;
-  tokenAddress: string;
-  name: string;
-  symbol: string;
-  description: string;
-  image: string;
-  keccak256Hash: string;
-  timestamp: number;
-
-  constructor(
-    creator: string,
-    tokenAddress: string,
-    name: string,
-    symbol: string,
-    description: string,
-    image?: string, // base64
-  ) {
-    this.creator = creator;
-    this.tokenAddress = tokenAddress;
-    this.name = name;
-    this.symbol = symbol;
-    this.description = description;
-    this.image = image ?? "none";
-    this.timestamp = Date.now();
-
-    const dataToHash = `${creator}:${tokenAddress}:${name}:${symbol}:${description}:${this.image}`;
-    this.keccak256Hash = keccak256(`0x${Buffer.from(toUtf8Bytes(dataToHash)).toString("hex")}`);
-  }
-
-  static readonly abi = [
-    {
-      type: "event",
-      name: "TokenCreated",
-      inputs: [
-        { name: "creator", type: "address", indexed: true },
-        { name: "tokenAddress", type: "address", indexed: false },
-        { name: "name", type: "string", indexed: false },
-        { name: "symbol", type: "string", indexed: false },
-        { name: "description", type: "string", indexed: false },
-        { name: "image", type: "string", indexed: false },
-      ],
-      anonymous: false,
-    },
-  ] as const;
-}
 
 function parseTokenCreatedEvent(decodedArgs: unknown): TokenCreatedEvent | null {
   if (typeof decodedArgs === "object" && decodedArgs !== null && !Array.isArray(decodedArgs)) {
@@ -140,10 +95,7 @@ export default function LaunchPage() {
 
                 const event = parseTokenCreatedEvent(decoded.args);
                 if (event) {
-                  console.debug("Token hash:", event.keccak256Hash);
-                  console.debug("Timestamp:", new Date(event.timestamp).toISOString());
-
-                  localStorage.setItem(`token-${event.keccak256Hash}`, JSON.stringify(event));
+                  tokenEventQueue.enqueue(event);
                   router.push(`/meme/${event.keccak256Hash}`);
 
                   found = true;

@@ -148,7 +148,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1746438344.json",
+      deploymentFile: "run-1746536277.json",
       deploymentScript: "Deploy.s.sol",
     },
     MemeCoinFactory: {
@@ -377,7 +377,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1746438344.json",
+      deploymentFile: "run-1746536277.json",
       deploymentScript: "Deploy.s.sol",
     },
   },
