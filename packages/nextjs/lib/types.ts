@@ -1,4 +1,5 @@
 import { id as keccak256, toUtf8Bytes } from "ethers";
+import { ethers } from "ethers";
 
 export class TokenCreatedEvent {
   creator: string;
@@ -9,6 +10,7 @@ export class TokenCreatedEvent {
   image: string;
   keccak256Hash: string;
   timestamp: number;
+  progress?: number;
 
   constructor(
     creator: string,
@@ -25,10 +27,12 @@ export class TokenCreatedEvent {
     this.description = description;
     this.image = image ?? "none";
     this.timestamp = Date.now();
-
+    this.progress = this.deterministicProgress();
     const dataToHash = `${creator}:${tokenAddress}:${name}:${symbol}:${description}:${this.image}`;
     this.keccak256Hash = keccak256(`0x${Buffer.from(toUtf8Bytes(dataToHash)).toString("hex")}`);
   }
+
+  static readonly topic = ethers.id("TokenCreated(address,address,string,string,string,string)");
 
   static readonly abi = [
     {
@@ -45,4 +49,9 @@ export class TokenCreatedEvent {
       anonymous: false,
     },
   ] as const;
+
+  private deterministicProgress(): number {
+    const hash = [...this.tokenAddress].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return hash % 100;
+  }
 }
