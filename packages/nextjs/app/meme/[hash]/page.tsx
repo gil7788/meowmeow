@@ -1,7 +1,7 @@
 import { use } from "react";
-import ProjectClientPage from "@/components/ProjectClientPage";
+import MemeClientPage from "~~/components/MemeClientPage";
 
 export default function ProjectPage({ params }: { params: Promise<{ hash: string }> }) {
   const { hash } = use(params);
-  return <ProjectClientPage hash={hash} />;
+  return <MemeClientPage hash={hash} />;
 }

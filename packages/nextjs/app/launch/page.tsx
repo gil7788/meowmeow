@@ -12,11 +12,8 @@ import { id as keccak256 } from "ethers";
 import { ArrowLeft, Cat } from "lucide-react";
 import { decodeEventLog } from "viem";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { tokenEventQueue } from "~~/lib/memoryQueue";
 import { TokenCreatedEvent } from "~~/lib/types";
 import { encodeBase64 } from "~~/utils/encoderBase64";
-
-// import type { Address } from "viem";
 
 // [TODO] Move to a config file
 const FACTORY_ADDRESS = "0xa15bb66138824a1c7167f5e85b957d04dd34e468";
@@ -95,8 +92,8 @@ export default function LaunchPage() {
 
                 const event = parseTokenCreatedEvent(decoded.args);
                 if (event) {
-                  tokenEventQueue.enqueue(event);
-                  router.push(`/meme/${event.keccak256Hash}`);
+                  localStorage.setItem(`launched-token-${event.tokenAddress}`, JSON.stringify(event));
+                  router.push(`/meme/${event.tokenAddress}`);
 
                   found = true;
                   break;

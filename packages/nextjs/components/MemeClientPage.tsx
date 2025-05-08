@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { tokenEventQueue } from "@/lib/memoryQueue";
 import { ArrowLeft, Calendar, Clock, Users } from "lucide-react";
 import type { TokenCreatedEvent } from "~~/lib/types";
 import { decodeBase64ToBlob } from "~~/utils/encoderBase64";
@@ -71,14 +70,14 @@ const formatDate = (dateString: string) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 };
 
-export default function ProjectClientPage({ hash }: { hash: string }) {
+export default function MemeClientPage({ hash }: { hash: string }) {
   const [project, setProject] = useState<ProjectData | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fallback = getFallbackProjectData(hash);
-
-    const token: TokenCreatedEvent | undefined = tokenEventQueue.getByKey(e => e.keccak256Hash === hash);
+    const raw = localStorage.getItem(`launched-token-${hash}`);
+    const token: TokenCreatedEvent | null = raw ? JSON.parse(raw) : null;
 
     if (!token) {
       setProject(fallback);
