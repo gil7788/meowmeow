@@ -22,7 +22,7 @@ contract BondingCurveAuction {
 
     constructor(string memory name, string memory symbol) {
         owner = msg.sender;
-        token = new MemeCoin(name, symbol, address(this));
+        token = new MemeCoin(name, symbol);
         curve = new BondingCurve(MIN_PRICE, FEE);
     }
 
