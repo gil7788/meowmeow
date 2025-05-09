@@ -1,15 +1,21 @@
-// packages/foundry/script/DeployMemeCoinFactory.s.sol
-pragma solidity ^0.8.26;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
-import { MemeCoinFactory } from "../contracts/MemeCoinFactory.sol";
+import "../contracts/MemeCoinFactory.sol";
 
 contract DeployMemeCoinFactory is Script {
-    function setUp() public { }
+    MemeCoinFactory public factory;
 
     function run() public {
         vm.startBroadcast();
-        new MemeCoinFactory();
+        factory = new MemeCoinFactory();
         vm.stopBroadcast();
+
+        console.log("MemeCoinFactory deployed at:", address(factory));
+    }
+
+    function getFactory() public view returns (address) {
+        return address(factory);
     }
 }
