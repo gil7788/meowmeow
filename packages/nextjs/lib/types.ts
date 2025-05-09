@@ -55,3 +55,23 @@ export class TokenCreatedEvent {
     return hash % 100;
   }
 }
+
+export type ProjectData = {
+  id: string;
+  name: string;
+  description: string;
+  longDescription: string;
+  image: string;
+  raised: string;
+  goal: string;
+  progress: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  tokenSymbol: string;
+  tokenPrice: string;
+  totalSupply: string;
+  features: string[];
+  tokenAllocation: { name: string; percentage: number }[];
+  audit: string;
+};
