@@ -3,20 +3,20 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ProjectData } from "@/lib/types";
-import { decodeBase64ToBlob } from "@/utils/encoderBase64";
 
 export default function MemeProfile({ project }: { project: ProjectData }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (project.image && project.image !== "none") {
-      try {
-        const blob = decodeBase64ToBlob(project.image);
-        const url = URL.createObjectURL(blob);
-        setImageUrl(url);
-        return () => URL.revokeObjectURL(url);
-      } catch (err) {
-        console.warn(`Invalid image format: ${err}`);
+      // is Base 64 Check
+      const isBase64 = /^[A-Za-z0-9+/=]+$/.test(project.image);
+
+      if (isBase64) {
+        const dataUrl = `data:image/png;base64,${project.image}`;
+        setImageUrl(dataUrl);
+      } else {
+        setImageUrl(project.image);
       }
     }
   }, [project.image]);
@@ -24,13 +24,9 @@ export default function MemeProfile({ project }: { project: ProjectData }) {
   return (
     <div className="flex flex-col md:flex-row gap-6 items-start">
       <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-        <Image
-          src={imageUrl || project.image}
-          alt={project.name}
-          width={96}
-          height={96}
-          className="w-full h-full object-cover"
-        />
+        {imageUrl && (
+          <Image src={imageUrl} alt={project.name} width={96} height={96} className="w-full h-full object-cover" />
+        )}
       </div>
       <div className="space-y-2">
         <div className="flex items-center gap-2">

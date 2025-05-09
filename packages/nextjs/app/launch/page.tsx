@@ -8,40 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { id as keccak256 } from "ethers";
+import { parseTokenCreatedLog } from "@/lib/onchainEventParser";
+import { ethers } from "ethers";
 import { ArrowLeft, Cat } from "lucide-react";
-import { decodeEventLog } from "viem";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { TokenCreatedEvent } from "~~/lib/types";
 import { encodeBase64 } from "~~/utils/encoderBase64";
-
-// [TODO] Move to a config file
-const FACTORY_ADDRESS = "0xa15bb66138824a1c7167f5e85b957d04dd34e468";
-
-function parseTokenCreatedEvent(decodedArgs: unknown): TokenCreatedEvent | null {
-  if (typeof decodedArgs === "object" && decodedArgs !== null && !Array.isArray(decodedArgs)) {
-    const obj = decodedArgs as Record<string, unknown>;
-    for (const input of TokenCreatedEvent.abi[0].inputs) {
-      if (typeof obj[input.name] !== "string") {
-        throw new Error(
-          `Invalid event arg ${input.name}: expected type ${input.type}, instead got ${typeof obj[input.name]}`,
-        );
-      }
-    }
-
-    const image = typeof obj.image === "string" ? obj.image : "";
-
-    return new TokenCreatedEvent(
-      obj.creator as string,
-      obj.tokenAddress as string,
-      obj.name as string,
-      obj.symbol as string,
-      obj.description as string,
-      image as string,
-    );
-  }
-  throw new Error("Invalid event args: one or more required fields are missing");
-}
 
 export default function LaunchPage() {
   const [name, setName] = useState("");
@@ -63,55 +35,33 @@ export default function LaunchPage() {
 
     try {
       const logoBase64 = await encodeBase64(logo);
-      const eventSignature = "TokenCreated(address,address,string,string,string,string)";
-      const TOKEN_CREATED_EVENT_SIG = keccak256(eventSignature);
 
-      await writeContractAsync(
-        {
-          functionName: "mintNewToken",
-          args: [name, symbol, description, logoBase64],
-        },
-        {
-          onBlockConfirmation: txnReceipt => {
-            let found = false;
+      const txHash = await writeContractAsync({
+        functionName: "mintNewToken",
+        args: [name, symbol, description, logoBase64],
+      });
 
-            for (const log of txnReceipt.logs) {
-              if (
-                log.address?.toLowerCase() !== FACTORY_ADDRESS.toLowerCase() ||
-                log.topics[0] !== TOKEN_CREATED_EVENT_SIG
-              ) {
-                continue;
-              }
+      if (!txHash) throw new Error("Transaction failed to submit.");
 
-              try {
-                const decoded = decodeEventLog({
-                  abi: TokenCreatedEvent.abi,
-                  data: log.data,
-                  topics: log.topics,
-                });
+      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
 
-                const event = parseTokenCreatedEvent(decoded.args);
-                if (event) {
-                  localStorage.setItem(`launched-token-${event.tokenAddress}`, JSON.stringify(event));
-                  router.push(`/meme/${event.tokenAddress}`);
+      const receipt = await provider.waitForTransaction(txHash);
+      if (!receipt) {
+        throw new Error("Transaction receipt is null. Wait for transaction failed.");
+      }
 
-                  found = true;
-                  break;
-                }
-              } catch (error) {
-                console.error("Failed to decode event log:", error);
-              }
-            }
+      const iface = new ethers.Interface(TokenCreatedEvent.abi);
+      let parsedEvent: TokenCreatedEvent | null = null;
 
-            if (!found) {
-              console.error(
-                "Token launched, but could not find token address in logs. Make sure FACTORY_ADDRESS is correct and contract emits the event.",
-              );
-            }
-          },
-        },
-      );
+      for (const log of receipt.logs) {
+        parsedEvent = parseTokenCreatedLog(log, iface);
+        if (parsedEvent) break;
+      }
 
+      if (!parsedEvent) throw new Error("Could not find valid TokenCreated log in transaction receipt.");
+
+      localStorage.setItem(`launched-token-${parsedEvent.tokenAddress}`, JSON.stringify(parsedEvent));
+      router.push(`/meme/${parsedEvent.tokenAddress}`);
       resetForm();
     } catch (err) {
       console.error("Error submitting meme coin:", (err as Error).message);
