@@ -18,7 +18,7 @@ contract BondingCurveAuction {
     event Launch(string name, string symbol, address token);
 
     uint256 public constant MIN_PRICE = 1 gwei;
-    uint256 public constant FEE = 1 gwei;
+    uint256 public constant FEE = 3e16; // 3% fee (0.03 * 1e18)
 
     constructor(string memory name, string memory symbol) {
         owner = msg.sender;
@@ -30,7 +30,7 @@ contract BondingCurveAuction {
         require(msg.value > 0, "Zero ETH");
         require(!launched, "Already launched");
 
-        uint256 price = curve.mintingCost(token.totalSupply(), amountToMint);
+        uint256 price = curve.getMintCost(token.totalSupply(), amountToMint);
         require(price <= msg.value, "Insufficient ETH");
 
         token.mint(msg.sender, amountToMint);
@@ -38,8 +38,7 @@ contract BondingCurveAuction {
 
         emit Buy(msg.sender, amountToMint, price);
 
-        uint256 capEstimate = token.totalSupply() * curve.price(token.totalSupply());
-        if (capEstimate >= MAX_CAP) {
+        if (totalEthRaised >= MAX_CAP) {
             launchOnOcelex();
         }
     }
@@ -47,7 +46,7 @@ contract BondingCurveAuction {
     function sell(uint256 amount) external {
         require(amount > 0, "Zero amount");
 
-        uint256 refund = curve.refundAmount(token.totalSupply(), amount);
+        uint256 refund = curve.getBurnRefund(token.totalSupply(), amount);
         require(address(this).balance >= refund, "Insufficient funds");
 
         token.burn(msg.sender, amount);
@@ -59,9 +58,7 @@ contract BondingCurveAuction {
 
     function launchOnOcelex() public {
         require(!launched, "Already launched");
-
-        uint256 cap = token.totalSupply() * curve.price(token.totalSupply());
-        require(address(this).balance == 0 || cap >= MAX_CAP, "Auction not finished");
+        require(totalEthRaised >= MAX_CAP, "Auction not finished");
 
         launched = true;
         emitLaunched();
