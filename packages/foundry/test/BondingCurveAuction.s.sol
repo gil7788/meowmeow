@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
 import "../contracts/BondingCurveAuction.sol";
+import "../contracts/MemeCoin.sol";
 
 contract BondingCurveAuctionTest is Test {
     BondingCurveAuction public auction;
@@ -11,8 +12,9 @@ contract BondingCurveAuctionTest is Test {
     address public bob = address(0x2);
 
     function setUp() public {
-        auction = new BondingCurveAuction("MemeCoin", "MEME");
-        token = auction.token();
+        token = new MemeCoin("MemeCoin", "MEME");
+        auction = new BondingCurveAuction(token);
+        token.transferOwnership(address(auction));
     }
 
     function testInitialTokenState() public view {
@@ -24,7 +26,8 @@ contract BondingCurveAuctionTest is Test {
     function testBuyMintTokens() public {
         vm.deal(alice, 1 ether);
         vm.prank(alice);
-        auction.buy{ value: 1 ether }(1_000_000); // Example mint amount
+        // Mint 1M tokens
+        auction.buy{ value: 1 ether }(1_000_000);
 
         uint256 balance = token.balanceOf(alice);
         assertGt(balance, 0);

@@ -20,9 +20,9 @@ contract BondingCurveAuction {
     uint256 public constant MIN_PRICE = 1 gwei;
     uint256 public constant FEE = 3e16; // 3% fee (0.03 * 1e18)
 
-    constructor(string memory name, string memory symbol) {
+    constructor(MemeCoin _token) {
         owner = msg.sender;
-        token = new MemeCoin(name, symbol);
+        token = _token;
         curve = new BondingCurve(MIN_PRICE, FEE);
     }
 
@@ -61,10 +61,6 @@ contract BondingCurveAuction {
         require(totalEthRaised >= MAX_CAP, "Auction not finished");
 
         launched = true;
-        emitLaunched();
-    }
-
-    function emitLaunched() internal {
         emit Launch(token.name(), token.symbol(), address(token));
     }
 }
