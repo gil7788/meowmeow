@@ -1,4 +1,4 @@
-import { id as keccak256, toUtf8Bytes } from "ethers";
+import { getAddress, id as keccak256, toUtf8Bytes } from "ethers";
 import { ethers } from "ethers";
 
 export class TokenCreatedEvent {
@@ -20,15 +20,15 @@ export class TokenCreatedEvent {
     description: string,
     image?: string, // base64
   ) {
-    this.creator = creator;
-    this.tokenAddress = tokenAddress;
+    this.creator = getAddress(creator); // normalize
+    this.tokenAddress = getAddress(tokenAddress); // 👈 normalize here
     this.name = name;
     this.symbol = symbol;
     this.description = description;
     this.image = image ?? "none";
     this.timestamp = Date.now();
     this.progress = this.deterministicProgress();
-    const dataToHash = `${creator}:${tokenAddress}:${name}:${symbol}:${description}:${this.image}`;
+    const dataToHash = `${this.creator}:${this.tokenAddress}:${name}:${symbol}:${description}:${this.image}`;
     this.keccak256Hash = keccak256(`0x${Buffer.from(toUtf8Bytes(dataToHash)).toString("hex")}`);
   }
 
