@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     MemeCoinFactory: {
-      address: "0xf7cd8fa9b94db2aa972023b379c7f72c65e4de9d",
+      address: "0x2a264f26859166c5bf3868a54593ee716aebc848",
       abi: [
         {
           type: "function",
@@ -120,11 +120,11 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1746880573.json",
+      deploymentFile: "run-1746891254.json",
       deploymentScript: "Deploy.s.sol",
     },
     LaunchPad: {
-      address: "0x12975173b87f7595ee45dffb2ab812ece596bf84",
+      address: "0xd04ff4a75edd737a73e92b2f2274cb887d96e110",
       abi: [
         {
           type: "constructor",
@@ -268,6 +268,35 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "priceOracle",
+          inputs: [
+            {
+              name: "meme",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "isBuying",
+              type: "bool",
+              internalType: "bool",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
           name: "sell",
           inputs: [
             {
@@ -305,6 +334,62 @@ const deployedContracts = {
         },
         {
           type: "event",
+          name: "Buy",
+          inputs: [
+            {
+              name: "buyer",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+            {
+              name: "price",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+            {
+              name: "tokenTotalSupply",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "Launch",
+          inputs: [
+            {
+              name: "name",
+              type: "string",
+              indexed: false,
+              internalType: "string",
+            },
+            {
+              name: "symbol",
+              type: "string",
+              indexed: false,
+              internalType: "string",
+            },
+            {
+              name: "token",
+              type: "address",
+              indexed: false,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
           name: "MemeLaunched",
           inputs: [
             {
@@ -324,6 +409,31 @@ const deployedContracts = {
               type: "address",
               indexed: false,
               internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "Sell",
+          inputs: [
+            {
+              name: "seller",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+            {
+              name: "refund",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
             },
           ],
           anonymous: false,
@@ -373,7 +483,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1746880573.json",
+      deploymentFile: "run-1746891254.json",
       deploymentScript: "Deploy.s.sol",
     },
   },

@@ -30,6 +30,7 @@ contract BondingCurve {
             for (int256 i = x + 1; i <= x + d; i++) {
                 price += i * i;
             }
+            price += 1; // Ceil round up
         } else {
             for (int256 i = x; i > x + d; i--) {
                 price += i * i;

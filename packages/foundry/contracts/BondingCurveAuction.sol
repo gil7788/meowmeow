@@ -9,13 +9,9 @@ contract BondingCurveAuction {
     BondingCurve public curve;
     address public owner;
     uint256 public totalEthRaised;
-    uint256 public constant MAX_CAP = 10 ether;
     bool public launched = false;
 
-    event Buy(address indexed buyer, uint256 amount, uint256 price);
-    event Sell(address indexed seller, uint256 amount, uint256 refund);
-    event Launch(string name, string symbol, address token);
-
+    uint256 public constant MAX_CAP = 10 ether;
     uint256 public constant MIN_PRICE = 1 gwei;
     uint256 public constant FEE = 3e16; // 3% fee (0.03 * 1e18)
 
@@ -34,8 +30,6 @@ contract BondingCurveAuction {
 
         token.mint(msg.sender, amountToMint);
         totalEthRaised += msg.value;
-
-        emit Buy(msg.sender, amountToMint, price);
 
         if (totalEthRaised >= MAX_CAP) {
             launchOnOcelex();
@@ -66,7 +60,16 @@ contract BondingCurveAuction {
         totalEthRaised -= refund;
         payable(from).transfer(refund);
 
-        emit Sell(from, amount, refund);
+        // emit Sell(from, amount, refund);
+    }
+
+    // [TODO]: Not needed for production
+    function priceOracle(bool isBuying, uint256 amount) external view returns (uint256) {
+        if (isBuying) {
+            return curve.getMintCost(token.totalSupply(), amount);
+        } else {
+            return curve.getBurnRefund(token.totalSupply(), amount);
+        }
     }
 
     function launchOnOcelex() public {
@@ -74,6 +77,6 @@ contract BondingCurveAuction {
         require(totalEthRaised >= MAX_CAP, "Auction not finished");
 
         launched = true;
-        emit Launch(token.name(), token.symbol(), address(token));
+        // emit Launch(token.name(), token.symbol(), address(token));
     }
 }
