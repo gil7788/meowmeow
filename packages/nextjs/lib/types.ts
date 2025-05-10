@@ -1,4 +1,4 @@
-import { id as keccak256, toUtf8Bytes } from "ethers";
+import { getAddress, id as keccak256, toUtf8Bytes } from "ethers";
 import { ethers } from "ethers";
 
 export class TokenCreatedEvent {
@@ -20,15 +20,15 @@ export class TokenCreatedEvent {
     description: string,
     image?: string, // base64
   ) {
-    this.creator = creator;
-    this.tokenAddress = tokenAddress;
+    this.creator = getAddress(creator);
+    this.tokenAddress = getAddress(tokenAddress);
     this.name = name;
     this.symbol = symbol;
     this.description = description;
     this.image = image ?? "none";
     this.timestamp = Date.now();
     this.progress = this.deterministicProgress();
-    const dataToHash = `${creator}:${tokenAddress}:${name}:${symbol}:${description}:${this.image}`;
+    const dataToHash = `${this.creator}:${this.tokenAddress}:${name}:${symbol}:${description}:${this.image}`;
     this.keccak256Hash = keccak256(`0x${Buffer.from(toUtf8Bytes(dataToHash)).toString("hex")}`);
   }
 
@@ -70,8 +70,26 @@ export type ProjectData = {
   status: string;
   tokenSymbol: string;
   tokenPrice: string;
-  totalSupply: string;
+  totalSupply: number;
   features: string[];
   tokenAllocation: { name: string; percentage: number }[];
   audit: string;
 };
+
+export class BuyEvent {
+  buyer: string;
+  amount: bigint;
+  price: bigint;
+  totalSupply: bigint;
+
+  constructor(buyer: string, amount: bigint, price: bigint, totalSupply: bigint) {
+    this.buyer = buyer;
+    this.amount = amount;
+    this.price = price;
+    this.totalSupply = totalSupply;
+  }
+
+  static topic = "0x" + ethers.id("Buy(address,uint256,uint256,uint256)").slice(2); // event signature hash
+
+  static abi = ["event Buy(address indexed buyer, uint256 amount, uint256 price, uint256 tokenTotalSupply)"];
+}
