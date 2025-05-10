@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import MemeCoinAbi from "@/abi/MemeCoin.json";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ethers } from "ethers";
 import { ArrowDownUp } from "lucide-react";
-import { parseEther } from "viem";
 import { useAccount, useWalletClient } from "wagmi";
 import deployedContracts from "~~/contracts/deployedContracts";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 interface BuySellTabProps {
   isBuying: boolean;
@@ -33,49 +33,94 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
 }) => {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const { writeContractAsync, isPending } = useScaffoldWriteContract("LaunchPad");
   const [isLoading, setIsLoading] = useState(false);
+  const [priceOracle, setPriceOracle] = useState<bigint>(0n);
+
+  function getPriceOracle(amount: bigint, totalSupply: bigint, isBuying: boolean): bigint {
+    const fee = 0.03; // 0.03% fee
+    let rawPrice = 0;
+
+    const amountBN = amount;
+
+    if (isBuying) {
+      for (let i = totalSupply + 1n; i <= totalSupply + amountBN; i++) {
+        rawPrice += Number(i * i);
+      }
+      return BigInt(Math.ceil(rawPrice * fee));
+    } else {
+      if (totalSupply <= amountBN) {
+        throw new Error(`Error, invalid sell amount, should be totalSupply ${totalSupply} > amount ${amountBN}`);
+      }
+      for (let i = totalSupply; i > totalSupply - amountBN; i--) {
+        rawPrice += Number(i * i);
+      }
+      return BigInt(Math.floor(rawPrice * fee));
+    }
+  }
+
+  useEffect(() => {
+    if (!walletClient || !ethers.isAddress(tokenAddress) || !amount || isNaN(Number(amount)) || BigInt(amount) <= 0n)
+      return;
+
+    const fetchPrice = async () => {
+      try {
+        const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+        const contract = new ethers.Contract(tokenAddress, MemeCoinAbi, provider);
+        const totalSupply = await contract.totalSupply().then((val: ethers.BigNumberish) => BigInt(val));
+        const parsedAmount = BigInt(amount);
+        const price = getPriceOracle(parsedAmount, totalSupply, isBuying);
+        setPriceOracle(price);
+      } catch (e) {
+        console.error("Failed to compute price oracle:", e);
+      }
+    };
+
+    fetchPrice();
+  }, [tokenAddress, receiveAmount, amount, isBuying, walletClient]);
 
   const handleTrade = async () => {
-    if (!walletClient || !address) return;
+    if (!walletClient || !address || !tokenAddress || !ethers.isAddress(tokenAddress)) {
+      alert("Invalid wallet or token address.");
+      return;
+    }
 
     try {
       setIsLoading(true);
-      const signer = await new ethers.BrowserProvider(walletClient.transport).getSigner();
-
-      const launchPad = new ethers.Contract(
-        deployedContracts[31337].LaunchPad.address,
-        deployedContracts[31337].LaunchPad.abi,
-        signer,
-      );
-
-      const parsedAmount = parseEther(amount || "0");
+      if (!amount || isNaN(Number(amount)) || Number(amount) < 0) {
+        alert("Please enter a valid, positive amount.");
+        setIsLoading(false);
+        return;
+      }
+      const parsedAmount = BigInt(amount);
 
       if (isBuying) {
-        const tx = await launchPad.buy(tokenAddress, parsedAmount, {
-          value: parsedAmount,
+        const txHash = await writeContractAsync({
+          functionName: "buy",
+          args: [tokenAddress, parsedAmount],
+          value: priceOracle,
         });
-        await tx.wait();
+        if (!txHash) throw new Error("Transaction not submitted.");
+        await new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL).waitForTransaction(txHash);
       } else {
-        // Step 1: approve LaunchPad to spend the tokens
+        const signer = await new ethers.BrowserProvider(walletClient.transport).getSigner();
         const memeCoin = new ethers.Contract(tokenAddress, MemeCoinAbi, signer);
-        // const memeCoin = new ethers.Contract(
-        //   tokenAddress,
-        //   deployedContracts[31337].MemeCoin.abi,
-        //   signer,
-        // );
 
-        const approveTx = await memeCoin.approve(deployedContracts[31337].LaunchPad.address, parsedAmount);
-        await approveTx.wait();
+        const approvalTx = await memeCoin.approve(deployedContracts[31337].LaunchPad.address, parsedAmount);
+        await approvalTx.wait();
 
-        // Step 2: call sell on LaunchPad
-        const tx = await launchPad.sell(tokenAddress, parsedAmount);
-        await tx.wait();
+        const txHash = await writeContractAsync({
+          functionName: "sell",
+          args: [tokenAddress, parsedAmount],
+        });
+        if (!txHash) throw new Error("Sell transaction not submitted.");
+        await new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL).waitForTransaction(txHash);
       }
 
       alert(`${isBuying ? "Bought" : "Sold"} successfully`);
     } catch (err: any) {
       console.error("Trade error:", err);
-      alert("Trade failed: " + (err?.message || "unknown error"));
+      alert("Trade failed: " + (err?.message || "Unknown error"));
     } finally {
       setIsLoading(false);
     }
@@ -85,9 +130,7 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Trade {tokenSymbol}/ZRC</CardTitle>
-        <CardDescription>
-          {isBuying ? `Buy ${tokenSymbol} tokens using ZRC` : `Sell ${tokenSymbol} tokens for ZRC`}
-        </CardDescription>
+        <CardDescription>{isBuying ? `Buy ${tokenSymbol} using ZRC` : `Sell ${tokenSymbol} for ZRC`}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -130,15 +173,19 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
           </div>
 
           <div className="pt-4">
-            <Button className="w-full" onClick={handleTrade} disabled={isLoading || !address}>
-              {isLoading ? "Processing..." : address ? `${isBuying ? "Buy" : "Sell"}` : "Connect Wallet to Trade"}
+            <Button className="w-full" onClick={handleTrade} disabled={isLoading || !address || isPending}>
+              {isLoading || isPending
+                ? "Processing..."
+                : address
+                  ? `${isBuying ? "Buy" : "Sell"}`
+                  : "Connect Wallet to Trade"}
             </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
             <div>
-              <p>Price</p>
-              <p className="font-medium text-foreground">1 {tokenSymbol} = ~0.00023 ZRC</p>
+              <p>Price (est.)</p>
+              <p className="font-medium text-foreground">{priceOracle.toString()} wei</p>
             </div>
             <div>
               <p>Liquidity</p>
