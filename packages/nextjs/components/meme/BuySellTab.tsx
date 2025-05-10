@@ -1,11 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import MemeCoinAbi from "@/abi/MemeCoin.json";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ethers } from "ethers";
 import { ArrowDownUp } from "lucide-react";
+import { parseEther } from "viem";
+import { useAccount, useWalletClient } from "wagmi";
+import deployedContracts from "~~/contracts/deployedContracts";
 
 interface BuySellTabProps {
   isBuying: boolean;
@@ -14,6 +19,7 @@ interface BuySellTabProps {
   setAmount: (val: string) => void;
   receiveAmount: string;
   tokenSymbol: string;
+  tokenAddress: string;
 }
 
 export const BuySellTab: React.FC<BuySellTabProps> = ({
@@ -23,7 +29,58 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
   setAmount,
   receiveAmount,
   tokenSymbol,
+  tokenAddress,
 }) => {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleTrade = async () => {
+    if (!walletClient || !address) return;
+
+    try {
+      setIsLoading(true);
+      const signer = await new ethers.BrowserProvider(walletClient.transport).getSigner();
+
+      const launchPad = new ethers.Contract(
+        deployedContracts[31337].LaunchPad.address,
+        deployedContracts[31337].LaunchPad.abi,
+        signer,
+      );
+
+      const parsedAmount = parseEther(amount || "0");
+
+      if (isBuying) {
+        const tx = await launchPad.buy(tokenAddress, parsedAmount, {
+          value: parsedAmount,
+        });
+        await tx.wait();
+      } else {
+        // Step 1: approve LaunchPad to spend the tokens
+        const memeCoin = new ethers.Contract(tokenAddress, MemeCoinAbi, signer);
+        // const memeCoin = new ethers.Contract(
+        //   tokenAddress,
+        //   deployedContracts[31337].MemeCoin.abi,
+        //   signer,
+        // );
+
+        const approveTx = await memeCoin.approve(deployedContracts[31337].LaunchPad.address, parsedAmount);
+        await approveTx.wait();
+
+        // Step 2: call sell on LaunchPad
+        const tx = await launchPad.sell(tokenAddress, parsedAmount);
+        await tx.wait();
+      }
+
+      alert(`${isBuying ? "Bought" : "Sold"} successfully`);
+    } catch (err: any) {
+      console.error("Trade error:", err);
+      alert("Trade failed: " + (err?.message || "unknown error"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -73,13 +130,15 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
           </div>
 
           <div className="pt-4">
-            <Button className="w-full">Connect Wallet to Trade</Button>
+            <Button className="w-full" onClick={handleTrade} disabled={isLoading || !address}>
+              {isLoading ? "Processing..." : address ? `${isBuying ? "Buy" : "Sell"}` : "Connect Wallet to Trade"}
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
             <div>
               <p>Price</p>
-              <p className="font-medium text-foreground">1 {tokenSymbol} = 0.00023 ZRC</p>
+              <p className="font-medium text-foreground">1 {tokenSymbol} = ~0.00023 ZRC</p>
             </div>
             <div>
               <p>Liquidity</p>

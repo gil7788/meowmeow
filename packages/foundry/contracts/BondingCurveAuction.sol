@@ -10,7 +10,6 @@ contract BondingCurveAuction {
     address public owner;
     uint256 public totalEthRaised;
     uint256 public constant MAX_CAP = 10 ether;
-
     bool public launched = false;
 
     event Buy(address indexed buyer, uint256 amount, uint256 price);
@@ -43,17 +42,31 @@ contract BondingCurveAuction {
         }
     }
 
-    function sell(uint256 amount) external {
+    // function sell(uint256 amount) external {
+    //     require(amount > 0, "Zero amount");
+
+    //     uint256 refund = curve.getBurnRefund(token.totalSupply(), amount);
+    //     require(address(this).balance >= refund, "Insufficient funds");
+
+    //     token.burn(msg.sender, amount);
+    //     totalEthRaised -= refund;
+    //     payable(msg.sender).transfer(refund);
+
+    //     emit Sell(msg.sender, amount, refund);
+    // }
+
+    function burnFor(address from, uint256 amount) external {
+        require(msg.sender == token.owner(), "Only LaunchPad can burn");
         require(amount > 0, "Zero amount");
 
         uint256 refund = curve.getBurnRefund(token.totalSupply(), amount);
         require(address(this).balance >= refund, "Insufficient funds");
 
-        token.burn(msg.sender, amount);
+        token.burn(from, amount);
         totalEthRaised -= refund;
-        payable(msg.sender).transfer(refund);
+        payable(from).transfer(refund);
 
-        emit Sell(msg.sender, amount, refund);
+        emit Sell(from, amount, refund);
     }
 
     function launchOnOcelex() public {

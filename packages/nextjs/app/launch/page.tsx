@@ -21,7 +21,7 @@ export default function LaunchPage() {
   const [description, setDescription] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
   const router = useRouter();
-  const { writeContractAsync, isPending } = useScaffoldWriteContract("MemeCoinFactory");
+  const { writeContractAsync, isPending } = useScaffoldWriteContract("LaunchPad");
 
   function resetForm() {
     setName("");
@@ -30,26 +30,26 @@ export default function LaunchPage() {
     setLogo(null);
   }
 
+  // [TODO] Import from .env
+  const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const logoBase64 = await encodeBase64(logo);
+    const txHash = await writeContractAsync({
+      functionName: "launchNewMeme",
+      args: [name, symbol, description, logoBase64],
+    });
+
+    if (!txHash) throw new Error("Transaction failed to submit.");
+
+    const receipt = await provider.waitForTransaction(txHash);
+    if (!receipt) {
+      throw new Error("Transaction receipt is null. Wait for transaction failed.");
+    }
+
     try {
-      const logoBase64 = await encodeBase64(logo);
-
-      const txHash = await writeContractAsync({
-        functionName: "mintNewToken",
-        args: [name, symbol, description, logoBase64],
-      });
-
-      if (!txHash) throw new Error("Transaction failed to submit.");
-
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
-
-      const receipt = await provider.waitForTransaction(txHash);
-      if (!receipt) {
-        throw new Error("Transaction receipt is null. Wait for transaction failed.");
-      }
-
       const iface = new ethers.Interface(TokenCreatedEvent.abi);
       let parsedEvent: TokenCreatedEvent | null = null;
 
