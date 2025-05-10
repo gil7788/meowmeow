@@ -52,6 +52,7 @@ export default function MemeTabs({ meme }: { meme: ProjectData }) {
           receiveAmount={receiveAmount}
           tokenSymbol={meme.tokenSymbol}
           tokenAddress={meme.id}
+          totalSupply={meme.totalSupply}
         />
       </TabsContent>
 

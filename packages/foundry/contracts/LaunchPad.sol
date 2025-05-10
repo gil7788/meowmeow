@@ -9,6 +9,10 @@ contract LaunchPad {
     MemeCoinFactory public memeFactory;
     address public owner;
 
+    event Buy(address indexed buyer, uint256 amount, uint256 price, uint256 tokenTotalSupply);
+    event Sell(address indexed seller, uint256 amount, uint256 refund);
+    event Launch(string name, string symbol, address token);
+
     mapping(address => address) public tokenToAuction;
     address[] public allTokens;
 
@@ -41,6 +45,7 @@ contract LaunchPad {
         address auction = tokenToAuction[token];
         require(auction != address(0), "Invalid token");
         BondingCurveAuction(auction).buy{ value: msg.value }(amount);
+        emit Buy(msg.sender, amount, msg.value, MemeCoin(token).totalSupply());
     }
 
     function sell(address token, uint256 amount) external {
@@ -58,5 +63,11 @@ contract LaunchPad {
 
     function getAllTokens() external view returns (address[] memory) {
         return allTokens;
+    }
+
+    // [TODO]: Not needed for production
+    function priceOracle(address meme, bool isBuying, uint256 amount) external view returns (uint256) {
+        BondingCurveAuction auction = BondingCurveAuction(tokenToAuction[meme]);
+        return auction.priceOracle(isBuying, amount);
     }
 }

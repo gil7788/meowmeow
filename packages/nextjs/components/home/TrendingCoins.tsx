@@ -6,9 +6,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getAllRecentEvents, listenToEvent } from "@/lib/onchainEvent";
 import { TokenCreatedEvent } from "@/lib/types";
 import { decodeBase64ToBlob } from "@/utils/encoderBase64";
+import { getAllRecentTokenCreatedEvents, listenToTokenCreated } from "~~/lib/onchainEventListener";
 
 const SEARCH_INTERVAL = 5000;
 const MAX_EVENTS = 48;
@@ -40,15 +40,17 @@ export const TrendingCoins = () => {
       setImages(prev => ({ ...prev, ...newImages }));
     };
 
+    // [TODO]: Revise fetch of recent token - can be further simplified by looking at LaunchPad Token array
+    // [TODO]: Abstract away to 1 function that load the recent token and listens
     const loadInitialTokens = async () => {
-      const initialTokens = await getAllRecentEvents(SEARCH_INTERVAL, MAX_EVENTS);
+      const initialTokens = await getAllRecentTokenCreatedEvents(SEARCH_INTERVAL, MAX_EVENTS);
       setTokens(initialTokens);
       extractImages(initialTokens);
     };
 
     loadInitialTokens();
 
-    const stopListening = listenToEvent((parsedEvent: TokenCreatedEvent) => {
+    const stopListening = listenToTokenCreated((parsedEvent: TokenCreatedEvent) => {
       setTokens(prev => {
         const updated = [parsedEvent, ...prev];
         extractImages([parsedEvent]);
