@@ -20,6 +20,7 @@ interface BuySellTabProps {
   receiveAmount: string;
   tokenSymbol: string;
   tokenAddress: string;
+  totalSupply: number;
 }
 
 export const BuySellTab: React.FC<BuySellTabProps> = ({
@@ -30,6 +31,7 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
   receiveAmount,
   tokenSymbol,
   tokenAddress,
+  totalSupply,
 }) => {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
@@ -38,9 +40,9 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
   const [priceOracle, setPriceOracle] = useState<bigint>(0n);
 
   function getPriceOracle(amount: bigint, totalSupply: bigint, isBuying: boolean): bigint {
-    const fee = 0.03; // 0.03% fee
+    // [TODO]: validate correctness - ensure it is one to one with onchain price oracle
+    const fee = 1.03;
     let rawPrice = 0;
-
     const amountBN = amount;
 
     if (isBuying) {
@@ -63,21 +65,14 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
     if (!walletClient || !ethers.isAddress(tokenAddress) || !amount || isNaN(Number(amount)) || BigInt(amount) <= 0n)
       return;
 
-    const fetchPrice = async () => {
-      try {
-        const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
-        const contract = new ethers.Contract(tokenAddress, MemeCoinAbi, provider);
-        const totalSupply = await contract.totalSupply().then((val: ethers.BigNumberish) => BigInt(val));
-        const parsedAmount = BigInt(amount);
-        const price = getPriceOracle(parsedAmount, totalSupply, isBuying);
-        setPriceOracle(price);
-      } catch (e) {
-        console.error("Failed to compute price oracle:", e);
-      }
-    };
-
-    fetchPrice();
-  }, [tokenAddress, receiveAmount, amount, isBuying, walletClient]);
+    try {
+      const parsedAmount = BigInt(amount);
+      const price = getPriceOracle(parsedAmount, BigInt(totalSupply), isBuying);
+      setPriceOracle(price);
+    } catch (e) {
+      console.error("Failed to compute price oracle:", e);
+    }
+  }, [amount, isBuying, totalSupply, tokenAddress, walletClient]);
 
   const handleTrade = async () => {
     if (!walletClient || !address || !tokenAddress || !ethers.isAddress(tokenAddress)) {
@@ -98,7 +93,8 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
         const txHash = await writeContractAsync({
           functionName: "buy",
           args: [tokenAddress, parsedAmount],
-          value: priceOracle,
+          // [TODO]: Probably can be tightened, from smart contract we know that value = priceOracle + 1
+          value: priceOracle + 10n,
         });
         if (!txHash) throw new Error("Transaction not submitted.");
         await new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL).waitForTransaction(txHash);
@@ -186,6 +182,7 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
             <div>
               <p>Price (est.)</p>
               <p className="font-medium text-foreground">{priceOracle.toString()} wei</p>
+              <p>Total Supply {totalSupply.toLocaleString("en-US")}</p>
             </div>
             <div>
               <p>Liquidity</p>

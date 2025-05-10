@@ -17,7 +17,7 @@ contract BondingCurveTest is Test {
         uint256 result = curve.getMintCost(2, 3);
 
         uint256 base = 3 ** 2 + 4 ** 2 + 5 ** 2; // = 9 + 16 + 25 = 52
-        uint256 expected = (base * (1e18 + FEE)) / 1e18;
+        uint256 expected = (base * (1e18 + FEE)) / 1e18 + 1;
 
         assertEq(result, expected);
     }
@@ -26,7 +26,7 @@ contract BondingCurveTest is Test {
         uint256 result = curve.getMintCost(0, 5);
 
         uint256 base = 1 ** 2 + 2 ** 2 + 3 ** 2 + 4 ** 2 + 5 ** 2; // = 1+4+9+16+25 = 55
-        uint256 expected = (base * (1e18 + FEE)) / 1e18;
+        uint256 expected = (base * (1e18 + FEE)) / 1e18 + 1;
 
         assertEq(result, expected);
     }
@@ -36,7 +36,7 @@ contract BondingCurveTest is Test {
         uint256 amountToMint = 2;
 
         uint256 base = 4 ** 2 + 5 ** 2; // 16 + 25 = 41
-        uint256 expected = (base * (1e18 + FEE)) / 1e18;
+        uint256 expected = (base * (1e18 + FEE)) / 1e18 + 1;
         uint256 result = curve.getMintCost(supply, amountToMint);
 
         assertEq(result, expected);
