@@ -6,8 +6,8 @@ import MemeProfile from "./meme/MemeProfile";
 import MemeTabs from "./meme/MemeTabs";
 import TokenSaleCard from "./meme/TokenSaleCard";
 import MemeCoinAbi from "@/abi/MemeCoin.json";
-import { ethers } from "ethers";
 import { ArrowLeft } from "lucide-react";
+import { usePublicClient } from "wagmi";
 import { listenToBuyEvent } from "~~/lib/onchainEventListener";
 import type { BuyEvent, ProjectData, TokenCreatedEvent } from "~~/lib/types";
 
@@ -43,6 +43,7 @@ const getFallbackProjectData = (id: string): ProjectData => ({
 });
 
 export default function MemeClientPage({ hash }: { hash: string }) {
+  const publicClient = usePublicClient();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [supply, setSupply] = useState<number>(0);
 
@@ -51,7 +52,7 @@ export default function MemeClientPage({ hash }: { hash: string }) {
     const raw = localStorage.getItem(`launched-token-${hash}`);
     const token: TokenCreatedEvent | null = raw ? JSON.parse(raw) : null;
 
-    if (!token) {
+    if (!token || !publicClient) {
       setProject(fallback);
       return;
     }
@@ -65,16 +66,16 @@ export default function MemeClientPage({ hash }: { hash: string }) {
       image: token.image || fallback.image,
     };
 
-    // [TODO] Move to event Listener
-    // [TODO]: Revise fetch of recent token - can be further simplified by looking at LaunchPad Token array
-    // [TODO]: Abstract away to 1 function that load the recent token and listens
     const fetchTotalSupply = async () => {
       try {
-        const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
-        const contract = new ethers.Contract(token.tokenAddress, MemeCoinAbi, provider);
-        const supply = await contract.totalSupply().then((val: ethers.BigNumberish) => Number(val));
-        setSupply(supply);
-        setProject({ ...projectData, totalSupply: supply });
+        const supply = await publicClient.readContract({
+          address: token.tokenAddress as `0x${string}`,
+          abi: MemeCoinAbi,
+          functionName: "totalSupply",
+        });
+        const total = Number(supply);
+        setSupply(total);
+        setProject({ ...projectData, totalSupply: total });
       } catch (e) {
         console.warn("Could not fetch totalSupply", e);
         setProject(projectData);
@@ -83,7 +84,6 @@ export default function MemeClientPage({ hash }: { hash: string }) {
 
     fetchTotalSupply();
 
-    // Fetch and update progress - which total raised. one is fetched, update progress and progress bar
     const stopListening = listenToBuyEvent((event: BuyEvent) => {
       if (event && event.buyer && token.tokenAddress === hash) {
         const total = Number(event.totalSupply);
@@ -102,7 +102,7 @@ export default function MemeClientPage({ hash }: { hash: string }) {
     return () => {
       if (typeof stopListening === "function") stopListening();
     };
-  }, [hash]);
+  }, [hash, publicClient]);
 
   if (!project) {
     return (

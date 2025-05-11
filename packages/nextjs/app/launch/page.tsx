@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { parseTokenCreatedLog } from "@/lib/onchainEventParser";
 import { ethers } from "ethers";
 import { ArrowLeft, Cat } from "lucide-react";
+import { usePublicClient } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { TokenCreatedEvent } from "~~/lib/types";
 import { encodeBase64 } from "~~/utils/encoderBase64";
@@ -22,6 +23,8 @@ export default function LaunchPage() {
   const [logo, setLogo] = useState<File | null>(null);
   const router = useRouter();
   const { writeContractAsync, isPending } = useScaffoldWriteContract("LaunchPad");
+  const publicClient = usePublicClient();
+  if (!publicClient) throw new Error("Public client is not ready.");
 
   function resetForm() {
     setName("");
@@ -30,41 +33,64 @@ export default function LaunchPage() {
     setLogo(null);
   }
 
-  // [TODO] Import from .env
-  const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const logoBase64 = await encodeBase64(logo);
-    const txHash = await writeContractAsync({
-      functionName: "launchNewMeme",
-      args: [name, symbol, description, logoBase64],
-    });
-
-    if (!txHash) throw new Error("Transaction failed to submit.");
-
-    const receipt = await provider.waitForTransaction(txHash);
-    if (!receipt) {
-      throw new Error("Transaction receipt is null. Wait for transaction failed.");
+    let logoBase64: string;
+    try {
+      logoBase64 = await encodeBase64(logo);
+    } catch (err) {
+      console.error("Image encoding error:", err);
+      return;
     }
 
+    let txHash: string | undefined;
+    try {
+      txHash = await writeContractAsync({
+        functionName: "launchNewMeme",
+        args: [name, symbol, description, logoBase64],
+      });
+    } catch (err: any) {
+      console.error("Contract execution failed:", err);
+      return;
+    }
+
+    if (!txHash) {
+      console.error(`Transaction submission failed, with functionName: "launchNewMeme",
+        args: [${name}, ${symbol}, ${description}, ${logoBase64}].`);
+      return;
+    }
+
+    let receipt;
+    try {
+      receipt = await publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
+    } catch (err) {
+      alert("Failed to fetch transaction receipt.");
+      console.error("Receipt error:", err);
+      return;
+    }
+
+    let parsedEvent: TokenCreatedEvent | null = null;
     try {
       const iface = new ethers.Interface(TokenCreatedEvent.abi);
-      let parsedEvent: TokenCreatedEvent | null = null;
-
       for (const log of receipt.logs) {
         parsedEvent = parseTokenCreatedLog(log, iface);
         if (parsedEvent) break;
       }
+      if (!parsedEvent) throw new Error("TokenCreated event not found.");
+    } catch (err) {
+      alert("Failed to extract token information from logs.");
+      console.error("Log parsing error:", err);
+      return;
+    }
 
-      if (!parsedEvent) throw new Error("Could not find valid TokenCreated log in transaction receipt.");
-
+    try {
       localStorage.setItem(`launched-token-${parsedEvent.tokenAddress}`, JSON.stringify(parsedEvent));
       router.push(`/meme/${parsedEvent.tokenAddress}`);
       resetForm();
     } catch (err) {
-      console.error("Error submitting meme coin:", (err as Error).message);
+      alert("Failed to store token data or redirect.");
+      console.error("Post-launch error:", err);
     }
   };
 

@@ -11,6 +11,7 @@ export default function MemeTabs({ meme }: { meme: ProjectData }) {
   const [isBuying, setIsBuying] = useState(true);
   const [amount, setAmount] = useState("");
   const [receiveAmount, setReceiveAmount] = useState("");
+  const [totalSupply, setTotalSupply] = useState(meme.totalSupply);
 
   useEffect(() => {
     if (amount && !isNaN(Number.parseFloat(amount))) {
@@ -52,7 +53,8 @@ export default function MemeTabs({ meme }: { meme: ProjectData }) {
           receiveAmount={receiveAmount}
           tokenSymbol={meme.tokenSymbol}
           tokenAddress={meme.id}
-          totalSupply={meme.totalSupply}
+          totalSupply={totalSupply}
+          setTotalSupply={setTotalSupply}
         />
       </TabsContent>
 

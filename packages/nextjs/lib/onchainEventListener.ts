@@ -1,31 +1,33 @@
 import { parseBuyLog, parseTokenCreatedLog } from "./onchainEventParser";
+import { env } from "@/lib/env";
 import { BuyEvent, TokenCreatedEvent } from "@/lib/types";
 import { ethers } from "ethers";
-import { getAddress } from "ethers";
+import deployedContracts from "~~/contracts/deployedContracts";
 
-const FACTORY_ADDRESS = getAddress(process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!);
+const chainId = env.network.chainId as keyof typeof deployedContracts;
+const LAUNCHPAD_ADDRESS = deployedContracts[chainId].LaunchPad.address;
+const LAUNCHPAD_ABI = deployedContracts[chainId].LaunchPad.abi;
 
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL!;
+function getHttpProvider(): ethers.JsonRpcProvider {
+  return new ethers.JsonRpcProvider(env.network.rpcUrl);
+}
 
-function createProvider(): ethers.JsonRpcProvider {
-  return new ethers.JsonRpcProvider(RPC_URL, {
-    name: "localhost",
-    chainId: 31337,
-  });
+function getWebSocketProvider(): ethers.WebSocketProvider {
+  return new ethers.WebSocketProvider(env.network.wsUrl);
 }
 
 export async function getAllRecentTokenCreatedEvents(
   searchInterval: number,
   maxEvents: number,
 ): Promise<TokenCreatedEvent[]> {
-  const provider = createProvider();
-  const iface = new ethers.Interface(TokenCreatedEvent.abi);
+  const provider = getHttpProvider();
+  const iface = new ethers.Interface(LAUNCHPAD_ABI);
   const latestBlock = await provider.getBlockNumber();
   const fromBlock = Math.max(latestBlock - searchInterval, 0);
 
   const logs = await provider.getLogs({
-    address: FACTORY_ADDRESS,
-    topics: [TokenCreatedEvent.topic],
+    address: LAUNCHPAD_ADDRESS,
+    topics: [ethers.id("TokenCreated(address,address,string,string,string,string)")],
     fromBlock,
     toBlock: "latest",
   });
@@ -38,14 +40,14 @@ export async function getAllRecentTokenCreatedEvents(
 }
 
 export async function getAllRecentBuyEvents(searchInterval: number, maxEvents: number): Promise<BuyEvent[]> {
-  const provider = createProvider();
-  const iface = new ethers.Interface(BuyEvent.abi);
+  const provider = getHttpProvider();
+  const iface = new ethers.Interface(LAUNCHPAD_ABI);
   const latestBlock = await provider.getBlockNumber();
   const fromBlock = Math.max(latestBlock - searchInterval, 0);
 
   const logs = await provider.getLogs({
-    address: FACTORY_ADDRESS,
-    topics: [BuyEvent.topic],
+    address: LAUNCHPAD_ADDRESS,
+    topics: [ethers.id("Buy(address,uint256,uint256,uint256)")],
     fromBlock,
     toBlock: "latest",
   });
@@ -57,9 +59,9 @@ export async function getAllRecentBuyEvents(searchInterval: number, maxEvents: n
     .slice(0, maxEvents);
 }
 
-export function listenToTokenCreated(onEvent: (event: TokenCreatedEvent) => void) {
-  const provider = createProvider();
-  const contract = new ethers.Contract(FACTORY_ADDRESS, TokenCreatedEvent.abi, provider);
+export function listenToTokenCreated(onEvent: (event: TokenCreatedEvent) => void): () => void {
+  const provider = getWebSocketProvider();
+  const contract = new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, provider);
 
   const handler = (
     creator: string,
@@ -82,9 +84,9 @@ export function listenToTokenCreated(onEvent: (event: TokenCreatedEvent) => void
   return () => contract.off("TokenCreated", handler);
 }
 
-export function listenToBuyEvent(onEvent: (event: BuyEvent) => void) {
-  const provider = createProvider();
-  const contract = new ethers.Contract(FACTORY_ADDRESS, BuyEvent.abi, provider);
+export function listenToBuyEvent(onEvent: (event: BuyEvent) => void): () => void {
+  const provider = getWebSocketProvider();
+  const contract = new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, provider);
 
   const handler = (
     buyer: string,
