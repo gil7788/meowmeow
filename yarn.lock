@@ -4840,7 +4840,6 @@ __metadata:
     eslint-config-next: ~15.2.3
     eslint-config-prettier: ~10.1.1
     eslint-plugin-prettier: ~5.2.4
-    ethers: ^6.14.0
     input-otp: ^1.4.2
     kubo-rpc-client: ~5.0.2
     lucide-react: ^0.503.0
@@ -9811,9 +9810,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^6.14.0":
-  version: 6.14.0
-  resolution: "ethers@npm:6.14.0"
+"ethers@npm:^6.13.7":
+  version: 6.13.7
+  resolution: "ethers@npm:6.13.7"
   dependencies:
     "@adraffy/ens-normalize": 1.10.1
     "@noble/curves": 1.2.0
@@ -9822,7 +9821,7 @@ __metadata:
     aes-js: 4.0.0-beta.5
     tslib: 2.7.0
     ws: 8.17.1
-  checksum: 937cab802131b289ca9a278fce595dff5977d358c5e2c72603e321a67a3ed531b4c19ddeec555d53fd474f75e101d599b6962cb3e33a691b526ecfebed9482d8
+  checksum: 247810e6bb6a4637b0ec51491af9e2589cccb4577a7db691faa3ed8b4f06af7c19e4574885883facc074aa36a909ef9b2930cb3ecdf5803f1e3a08f2b6c510f8
   languageName: node
   linkType: hard
 
@@ -15121,7 +15120,7 @@ __metadata:
     "@radix-ui/react-toggle": ^1.1.6
     "@radix-ui/react-toggle-group": ^1.1.7
     "@types/node": ^22.15.3
-    ethers: ^6.14.0
+    ethers: ^6.13.7
     husky: ~9.1.6
     lint-staged: ~13.2.2
   languageName: unknown
