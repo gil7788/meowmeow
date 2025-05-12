@@ -66,6 +66,43 @@ Run smart contract test with `yarn foundry:test`
 - Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
 - Edit your deployment scripts in `packages/foundry/script`
 
+## 🚀 Deployment Instructions (Garfield Testnet)
+
+To deploy your contracts to the [Garfield testnet](https://garfield.zircuit.com), follow these steps:
+
+1. **Set your private key**
+
+Make sure your `.env` file contains your deployer wallet's private key:
+
+```
+PRIVATE_KEY=your_private_key_here
+```
+
+> ⚠️ Do **not** use your primary wallet. Use a throwaway key with testnet funds.
+
+2. **Run the deploy script**
+
+In the root of your project, run the following commands:
+```bash
+cd ./packages/foundry
+source .env
+```
+
+```bash
+forge script script/Deploy.s.sol:DeployScript \
+  --rpc-url https://garfield-testnet.zircuit.com/ \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --chain 48898
+```
+
+This command will deploy your contract(s) to the Garfield testnet using Foundry.
+
+3. **(Optional) Verify your contract**
+
+If the Garfield testnet supports contract verification, you can add `--verify` to the deploy command.
+
+
 
 ## Documentation
 
