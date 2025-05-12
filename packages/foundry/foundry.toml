@@ -29,6 +29,8 @@ pgnTestnet = "https://sepolia.publicgoods.network"
 
 
 localhost = "http://127.0.0.1:8545"
+garfield = "https://garfield-testnet.zircuit.com/"
+zircuitMainnet = "https://zircuit-mainnet.drpc.org/"
 
 [etherscan]
 polygonMumbai = { key = "${ETHERSCAN_API_KEY}" }
