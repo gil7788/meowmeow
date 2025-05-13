@@ -16,12 +16,11 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
   const [localOracle, setLocalOracle] = useState(new FormattedEthUnits());
   const [selectedUnit, setSelectedUnit] = useState<string>("wei");
   const [displayPrice, setDisplayPrice] = useState("0");
-  const [isUnitManuallySelected, setIsUnitManuallySelected] = useState(false);
 
   function getPriceOracle(amount: bigint, totalSupply: bigint, isBuying: boolean): bigint {
-    if (!isBuying && totalSupply <= amount) return 0n;
+    if (!isBuying && totalSupply < amount) return 0n;
 
-    const feeNumerator = 110n;
+    const feeNumerator = 103n;
     const feeDenominator = 100n;
     let rawPrice = 0n;
     let price = 0n;
@@ -36,7 +35,6 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
     return price;
   }
 
-  // When amount or other inputs change → recompute the oracle and push to parent
   useEffect(() => {
     try {
       if (!amount || isNaN(Number(amount))) {
@@ -56,7 +54,6 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
 
       const rawPrice = getPriceOracle(parsedAmount, BigInt(totalSupply), isBuying);
       const formatted = new FormattedEthUnits(rawPrice);
-      console.log(formatted.toString());
       setLocalOracle(formatted);
       setPriceOracleWithUnit(formatted);
       const unitFormatted = localOracle.valueInAllUnits[selectedUnit];
@@ -68,18 +65,10 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
     }
   }, [amount, isBuying, totalSupply]);
 
-  // Update display when unit or oracle changes
   useEffect(() => {
-    const unitFormatted = localOracle.valueInAllUnits[selectedUnit];
-    setDisplayPrice(unitFormatted);
-  }, [localOracle, selectedUnit]);
-
-  // Automatically update selected unit unless user changed it manually
-//   useEffect(() => {
-//     if (!isUnitManuallySelected) {
-//         setSelectedUnit(localOracle.getClosestUnit());
-//     }
-//   }, [localOracle]);
+    if (!selectedUnit || !localOracle?.valueInAllUnits?.[selectedUnit]) return;
+    setDisplayPrice(localOracle.valueInAllUnits[selectedUnit]);
+  }, [selectedUnit, localOracle]);
 
   return (
     <div className="space-y-2">
@@ -90,7 +79,6 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
           className="w-24 border rounded-md text-sm bg-background text-foreground"
           value={selectedUnit}
           onChange={e => {
-            setIsUnitManuallySelected(true);
             setSelectedUnit(e.target.value);
           }}
         >

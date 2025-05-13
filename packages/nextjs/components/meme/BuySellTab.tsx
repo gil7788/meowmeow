@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import MemeCoinAbi from "@/abi/MemeCoin.json";
 import { EstimatedCost } from "@/components/meme/EstimatedCost";
 import { InputAmount } from "@/components/meme/InputAmount";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormattedEthUnits } from "@/utils/ethUnits";
 import { ethers } from "ethers";
 import { ArrowDownUp } from "lucide-react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import deployedContracts from "~~/contracts/deployedContracts";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { publicFetch } from "~~/lib/onchainEventListener";
 import { notification } from "~~/utils/scaffold-eth";
 
 interface BuySellTabProps {
@@ -19,7 +20,6 @@ interface BuySellTabProps {
   toggleTradeDirection: () => void;
   amount: string;
   setAmount: (val: string) => void;
-  receiveAmount: string;
   tokenSymbol: string;
   tokenAddress: string;
   totalSupply: number;
@@ -31,7 +31,6 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
   toggleTradeDirection,
   amount,
   setAmount,
-  receiveAmount,
   tokenSymbol,
   tokenAddress,
   totalSupply,
@@ -45,39 +44,21 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
   const [userBalance, setUserBalance] = useState<bigint>(0n);
   const [priceOracleWithUnit, setPriceOracleWithUnit] = useState<FormattedEthUnits>(new FormattedEthUnits());
 
-  const fetchUserBalance = async () => {
-    if (!publicClient || !address || !ethers.isAddress(tokenAddress)) return setUserBalance(0n);
-    try {
-      const balance = await publicClient.readContract({
-        address: tokenAddress as `0x${string}`,
-        abi: MemeCoinAbi,
-        functionName: "balanceOf",
-        args: [address],
-      });
-      setUserBalance(balance as bigint);
-    } catch (e) {
-      console.error("Failed to fetch token balance:", e);
-      setUserBalance(0n);
-    }
-  };
+  const fetchPublicData = useCallback(async () => {
+    if (!publicClient || !address) return;
 
-  const fetchTotalSupply = async () => {
-    try {
-      const updated = await publicClient.readContract({
-        address: tokenAddress as `0x${string}`,
-        abi: MemeCoinAbi,
-        functionName: "totalSupply",
-      });
-      setTotalSupply(Number(updated));
-    } catch (e) {
-      console.error("Failed to fetch total supply:", e);
-    }
-  };
+    const [totalSupply, userBalance] = await Promise.all([
+      publicFetch(publicClient, tokenAddress, "totalSupply", MemeCoinAbi, []),
+      publicFetch(publicClient, tokenAddress, "balanceOf", MemeCoinAbi, [address]),
+    ]);
+
+    setTotalSupply(totalSupply);
+    setUserBalance(userBalance as bigint);
+  }, [publicClient, tokenAddress, address, setTotalSupply, setUserBalance]);
 
   useEffect(() => {
-    fetchUserBalance();
-    fetchTotalSupply();
-  }, [publicClient, tokenAddress, address]);
+    fetchPublicData();
+  }, [fetchPublicData]);
 
   const handleTrade = async () => {
     if (!walletClient || !address || !ethers.isAddress(tokenAddress)) return notification.error("Invalid wallet/token");
@@ -107,8 +88,7 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
         await publicClient.waitForTransactionReceipt({ hash: txHash });
       }
 
-      await fetchTotalSupply();
-      await fetchUserBalance();
+      await fetchPublicData();
     } catch (err) {
       console.error("Trade error:", err);
     } finally {
@@ -120,23 +100,30 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Trade {tokenSymbol}/ETH</CardTitle>
-        <div>
-          <CardDescription>{isBuying ? `Buy ${tokenSymbol}` : `Sell ${tokenSymbol}`}</CardDescription>
-          <Button variant="ghost" onClick={toggleTradeDirection}>
-            <ArrowDownUp className="h-4 w-4" />
-            {isBuying ? "Sell" : "Buy"}
-          </Button>
-        </div>
       </CardHeader>
+
       <CardContent>
         <div className="space-y-6">
           <InputAmount amount={amount} setAmount={setAmount} tokenSymbol={tokenSymbol} />
+
+          <div className="flex justify-center my-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTradeDirection}
+              className="rounded-full bg-muted/50 hover:bg-muted"
+            >
+              <ArrowDownUp className="h-4 w-4" />
+            </Button>
+          </div>
+
           <EstimatedCost
             amount={amount}
             isBuying={isBuying}
             totalSupply={totalSupply}
             setPriceOracleWithUnit={setPriceOracleWithUnit}
           />
+
           <div className="pt-4">
             <Button className="w-full" onClick={handleTrade} disabled={isLoading || !address || isPending}>
               {isLoading || isPending

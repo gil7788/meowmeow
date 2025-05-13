@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AboutTab } from "@/components/meme/AboutTab";
 import { BuySellTab } from "@/components/meme/BuySellTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,25 +10,11 @@ import { ProjectData } from "~~/lib/types";
 export default function MemeTabs({ meme }: { meme: ProjectData }) {
   const [isBuying, setIsBuying] = useState(true);
   const [amount, setAmount] = useState("");
-  const [receiveAmount, setReceiveAmount] = useState("");
   const [totalSupply, setTotalSupply] = useState(meme.totalSupply);
-
-  useEffect(() => {
-    if (amount && !isNaN(Number.parseFloat(amount))) {
-      const rate = 0.00023;
-      const calculatedAmount = isBuying
-        ? (Number.parseFloat(amount) * rate).toFixed(8)
-        : (Number.parseFloat(amount) / rate).toFixed(0);
-      setReceiveAmount(calculatedAmount);
-    } else {
-      setReceiveAmount("");
-    }
-  }, [amount, isBuying]);
 
   const toggleTradeDirection = () => {
     setIsBuying(prev => !prev);
     setAmount("");
-    setReceiveAmount("");
   };
 
   return (
@@ -50,7 +36,6 @@ export default function MemeTabs({ meme }: { meme: ProjectData }) {
           toggleTradeDirection={toggleTradeDirection}
           amount={amount}
           setAmount={setAmount}
-          receiveAmount={receiveAmount}
           tokenSymbol={meme.tokenSymbol}
           tokenAddress={meme.id}
           totalSupply={totalSupply}
