@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FormattedEthUnits } from "@/utils/ethUnits";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormattedEthUnits } from "@/utils/ethUnits";
 
 interface EstimatedCostProps {
   amount: string;

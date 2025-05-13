@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from "react";
 import MemeCoinAbi from "@/abi/MemeCoin.json";
+import { EstimatedCost } from "@/components/meme/EstimatedCost";
+import { InputAmount } from "@/components/meme/InputAmount";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormattedEthUnits } from "@/utils/ethUnits";
 import { ethers } from "ethers";
 import { ArrowDownUp } from "lucide-react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import deployedContracts from "~~/contracts/deployedContracts";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
-import { FormattedEthUnits } from "@/utils/ethUnits";
-import { InputAmount } from "@/components/meme/InputAmount";
-import { EstimatedCost } from "@/components/meme/EstimatedCost";
 
 interface BuySellTabProps {
   isBuying: boolean;
@@ -136,14 +136,14 @@ export const BuySellTab: React.FC<BuySellTabProps> = ({
             isBuying={isBuying}
             totalSupply={totalSupply}
             setPriceOracleWithUnit={setPriceOracleWithUnit}
-/>
+          />
           <div className="pt-4">
             <Button className="w-full" onClick={handleTrade} disabled={isLoading || !address || isPending}>
               {isLoading || isPending
                 ? "Processing..."
                 : address
-                ? `${isBuying ? "Buy" : "Sell"}`
-                : "Connect Wallet to Trade"}
+                  ? `${isBuying ? "Buy" : "Sell"}`
+                  : "Connect Wallet to Trade"}
             </Button>
           </div>
 
