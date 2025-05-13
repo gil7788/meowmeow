@@ -59,6 +59,8 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
       console.log(formatted.toString());
       setLocalOracle(formatted);
       setPriceOracleWithUnit(formatted);
+      const unitFormatted = localOracle.valueInAllUnits[selectedUnit];
+      setDisplayPrice(unitFormatted);
     } catch {
       const fallback = new FormattedEthUnits();
       setLocalOracle(fallback);
@@ -73,11 +75,11 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
   }, [localOracle, selectedUnit]);
 
   // Automatically update selected unit unless user changed it manually
-  useEffect(() => {
-    if (!isUnitManuallySelected) {
-      setSelectedUnit(localOracle.getClosestUnit());
-    }
-  }, [localOracle]);
+//   useEffect(() => {
+//     if (!isUnitManuallySelected) {
+//         setSelectedUnit(localOracle.getClosestUnit());
+//     }
+//   }, [localOracle]);
 
   return (
     <div className="space-y-2">
