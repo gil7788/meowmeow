@@ -9,12 +9,12 @@ contract LaunchPad {
     MemeCoinFactory public memeFactory;
     address public owner;
 
+    mapping(address => address) public tokenToAuction;
+    address[] public allTokens;
+
     event Buy(address indexed buyer, uint256 amount, uint256 price, uint256 tokenTotalSupply);
     event Sell(address indexed seller, uint256 amount, uint256 refund);
     event Launch(string name, string symbol, address token);
-
-    mapping(address => address) public tokenToAuction;
-    address[] public allTokens;
 
     event TokenCreated(
         address indexed creator, address tokenAddress, string name, string symbol, string description, string image
@@ -32,29 +32,31 @@ contract LaunchPad {
         returns (MemeCoin)
     {
         MemeCoin meme = memeFactory.mintNewToken(name, symbol, description, image);
-        BondingCurveAuction auction = new BondingCurveAuction(meme);
+        BondingCurveAuction auction = new BondingCurveAuction(meme, address(this));
         tokenToAuction[address(meme)] = address(auction);
         allTokens.push(address(meme));
 
-        meme.transferOwnership(address(auction)); // Auction becomes owner
+        meme.transferOwnership(address(auction));
         emit TokenCreated(msg.sender, address(meme), name, symbol, description, image);
         return meme;
     }
 
     function buy(address token, uint256 amount) external payable {
-        address auction = tokenToAuction[token];
+        address payable auction = payable(tokenToAuction[token]);
         require(auction != address(0), "Invalid token");
-        BondingCurveAuction(auction).buy{ value: msg.value }(amount);
+        BondingCurveAuction(auction).buy{ value: msg.value }(msg.sender, amount);
         emit Buy(msg.sender, amount, msg.value, MemeCoin(token).totalSupply());
     }
 
     function sell(address token, uint256 amount) external {
-        address auction = tokenToAuction[token];
+        address payable auction = payable(tokenToAuction[token]);
         require(auction != address(0), "Invalid token");
+        MemeCoin meme = MemeCoin(token);
 
-        MemeCoin(token).transferFrom(msg.sender, address(this), amount);
-        MemeCoin(token).approve(auction, amount);
-        BondingCurveAuction(auction).burnFor(msg.sender, amount);
+        meme.transferFrom(msg.sender, address(this), amount);
+
+        BondingCurveAuction(auction).burnAndRefund(msg.sender, address(this), amount);
+        emit Sell(msg.sender, amount, meme.totalSupply());
     }
 
     function getAuction(address token) external view returns (address) {
@@ -63,11 +65,5 @@ contract LaunchPad {
 
     function getAllTokens() external view returns (address[] memory) {
         return allTokens;
-    }
-
-    // [TODO]: Not needed for production
-    function priceOracle(address meme, bool isBuying, uint256 amount) external view returns (uint256) {
-        BondingCurveAuction auction = BondingCurveAuction(tokenToAuction[meme]);
-        return auction.priceOracle(isBuying, amount);
     }
 }

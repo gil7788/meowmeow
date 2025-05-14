@@ -13,7 +13,7 @@ contract BondingCurveAuctionTest is Test {
 
     function setUp() public {
         token = new MemeCoin("MemeCoin", "MEME");
-        auction = new BondingCurveAuction(token);
+        auction = new BondingCurveAuction(token, address(this));
         token.transferOwnership(address(auction));
     }
 
@@ -24,10 +24,8 @@ contract BondingCurveAuctionTest is Test {
     }
 
     function testBuyMintTokens() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        // Mint 1M tokens
-        auction.buy{ value: 1 ether }(1_000_000);
+        vm.deal(address(this), 1 ether); // fund the "launchPad"
+        auction.buy{ value: 1 ether }(alice, 1_000_000);
 
         uint256 balance = token.balanceOf(alice);
         assertGt(balance, 0);
