@@ -2,6 +2,7 @@ import { parseBuyLog, parseTokenCreatedLog } from "./onchainEventParser";
 import { env } from "@/lib/env";
 import { BuyEvent, TokenCreatedEvent } from "@/lib/types";
 import { ethers } from "ethers";
+import { usePublicClient } from "wagmi";
 import deployedContracts from "~~/contracts/deployedContracts";
 
 const chainId = env.network.chainId as keyof typeof deployedContracts;
@@ -104,4 +105,27 @@ export function listenToBuyEvent(onEvent: (event: BuyEvent) => void): () => void
 
   contract.on("Buy", handler);
   return () => contract.off("Buy", handler);
+}
+
+export async function publicFetch(
+  publicClient: ReturnType<typeof usePublicClient>,
+  tokenAddress: string,
+  functionName: string,
+  tokenAbi: any,
+  args: any[] = [],
+): Promise<any> {
+  try {
+    if (publicClient == undefined) {
+      console.error(`Public client is undefined`);
+    }
+    const result = await publicClient!.readContract({
+      address: tokenAddress as `0x${string}`,
+      abi: tokenAbi,
+      functionName: functionName,
+      args: args,
+    });
+    return result;
+  } catch (e) {
+    console.error(`Failed to fetch ${functionName} from ${tokenAddress}:`, e);
+  }
 }
