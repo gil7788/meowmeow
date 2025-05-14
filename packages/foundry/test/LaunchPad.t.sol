@@ -85,7 +85,7 @@ contract LaunchPadTest is Test {
         MemeCoin token = MemeCoin(memeToken);
         assertEq(token.owner(), auction);
 
-        BondingCurveAuction bca = BondingCurveAuction(auction);
+        BondingCurveAuction bca = BondingCurveAuction(payable(auction));
         vm.deal(user, 10 ether);
         vm.startPrank(user);
 
@@ -93,54 +93,4 @@ contract LaunchPadTest is Test {
         uint256 price = bca.curve().getMintCost(0, amountToMint);
         launchPad.buy{ value: price }(memeToken, amountToMint);
     }
-
-    // function testBuy() public {
-    //     // Launch a new meme token
-    //     launchPad.launchNewMeme("BuyTest", "BUY", "desc", "img");
-
-    //     address token = launchPad.getAllTokens()[0];
-    //     address auction = launchPad.getAuction(token);
-    //     MemeCoin meme = MemeCoin(token);
-    //     BondingCurveAuction bca = BondingCurveAuction(auction);
-
-    //     // Fund and impersonate user
-    //     vm.deal(user, 10 ether);
-    //     vm.startPrank(user);
-
-    //     uint256 amountToMint = 1; // Buy 1 token
-    //     uint256 price = bca.curve().getMintCost(0, amountToMint);
-
-    //     launchPad.buy{ value: price }(token, amountToMint);
-
-    //     assertEq(meme.balanceOf(user), amountToMint);
-
-    //     vm.stopPrank();
-    // }
-
-    // function testBuyAndSell() public {
-    //     // Launch token
-    //     launchPad.launchNewMeme("Test", "TT", "desc", "img");
-
-    //     address token = launchPad.getAllTokens()[0];
-    //     address auction = launchPad.getAuction(token);
-    //     MemeCoin meme = MemeCoin(token);
-    //     BondingCurveAuction bca = BondingCurveAuction(auction);
-
-    //     // Prank user and fund them
-    //     vm.deal(user, 10 ether);
-    //     vm.startPrank(user);
-
-    //     uint256 amountToMint = 1; // mint 10 tokens
-    //     uint256 cost = bca.curve().getMintCost(0, amountToMint);
-
-    //     launchPad.buy{ value: cost }(token, amountToMint);
-
-    //     assertEq(meme.balanceOf(user), amountToMint);
-
-    //     // Approve for selling
-    //     meme.approve(auction, type(uint256).max);
-    //     launchPad.sell(token, amountToMint);
-
-    //     vm.stopPrank();
-    // }
 }

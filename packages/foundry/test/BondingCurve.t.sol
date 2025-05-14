@@ -61,14 +61,6 @@ contract BondingCurveTest is Test {
         curve.getBurnRefund(supply, amountToBurn);
     }
 
-    // function testMarketCapIsCorrect() view public {
-    //     uint256 supply = 7;
-    //     uint256 expected = 7 * 7;
-    //     uint256 result = curve.getMarketCap(supply);
-
-    //     assertEq(result, expected);
-    // }
-
     function testBuyZeroTokensReverts() public {
         vm.expectRevert("Must mint > 0");
         curve.getMintCost(5, 0);
@@ -77,5 +69,35 @@ contract BondingCurveTest is Test {
     function testSellZeroTokensReverts() public {
         vm.expectRevert("Invalid burn request");
         curve.getBurnRefund(5, 0);
+    }
+
+    function testCurveMatchesDeprecatedForMinting() public view {
+        for (uint256 supply = 0; supply <= 0; supply++) {
+            for (int256 delta = 1; delta <= 1000; delta++) {
+                uint256 modernPrice = curve.curve(supply, delta);
+                uint256 legacyPrice = curve.curve_deprecated(supply, delta);
+                assertEq(
+                    modernPrice,
+                    legacyPrice,
+                    string.concat("Mismatch at supply=", vm.toString(supply), ", delta=", vm.toString(delta))
+                );
+            }
+        }
+    }
+
+    function testBuyAlot() public view {
+        uint256 base = 40000;
+        int256 amount = 1000000;
+        uint256 result = curve.curve(base, amount);
+        uint256 expected = 38618188953322464;
+        assertGe(result, expected);
+    }
+
+    function testBuyAlotAtOnce() public view {
+        uint256 base = 1;
+        int256 amount = 1234567;
+        uint256 result = curve.curve(base, amount);
+        uint256 expected = 689949025699683072;
+        assertLe(result, expected);
     }
 }

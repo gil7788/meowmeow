@@ -7,76 +7,62 @@ import "./BondingCurve.sol";
 contract BondingCurveAuction {
     MemeCoin public token;
     BondingCurve public curve;
-    address public owner;
-    uint256 public totalEthRaised;
+    address public immutable launchPad;
     bool public launched = false;
 
     uint256 public constant MAX_CAP = 10 ether;
     uint256 public constant MIN_PRICE = 1 gwei;
-    uint256 public constant FEE = 3e16; // 3% fee (0.03 * 1e18)
+    uint256 public constant FEE = 3e16; // 3% fee
 
-    constructor(MemeCoin _token) {
-        owner = msg.sender;
+    event LogRefundAmount(uint256 refund);
+
+    constructor(MemeCoin _token, address _launchPad) {
         token = _token;
+        launchPad = _launchPad;
         curve = new BondingCurve(MIN_PRICE, FEE);
     }
 
-    function buy(uint256 amountToMint) external payable {
+    // Allow the contract to receive ETH
+    receive() external payable { }
+
+    function buy(address buyer, uint256 amountToMint) external payable {
+        require(msg.sender == launchPad, "Only LaunchPad can call buy");
         require(msg.value > 0, "Zero ETH");
         require(!launched, "Already launched");
 
         uint256 price = curve.getMintCost(token.totalSupply(), amountToMint);
         require(price <= msg.value, "Insufficient ETH");
 
-        token.mint(msg.sender, amountToMint);
-        totalEthRaised += msg.value;
+        token.mint(buyer, amountToMint);
 
-        if (totalEthRaised >= MAX_CAP) {
+        if (address(this).balance >= MAX_CAP) {
             launchOnOcelex();
         }
     }
 
-    // function sell(uint256 amount) external {
-    //     require(amount > 0, "Zero amount");
+    function burnAndRefund(address seller, address owner, uint256 amount) external {
+        require(msg.sender == launchPad, "Only LaunchPad can call burn");
+        require(amount > 0, "Amount must be greater than zero");
+        require(token.balanceOf(owner) >= amount, "Not enough tokens to burn");
 
-    //     uint256 refund = curve.getBurnRefund(token.totalSupply(), amount);
-    //     require(address(this).balance >= refund, "Insufficient funds");
+        uint256 supplyBefore = token.totalSupply();
+        require(amount <= supplyBefore, "Burn amount exceeds total supply");
 
-    //     token.burn(msg.sender, amount);
-    //     totalEthRaised -= refund;
-    //     payable(msg.sender).transfer(refund);
+        token.burn(owner, amount);
 
-    //     emit Sell(msg.sender, amount, refund);
-    // }
+        uint256 refund = curve.getBurnRefund(supplyBefore, amount);
+        require(refund > 0, "Refund is zero");
+        require(address(this).balance >= refund, "Insufficient ETH in auction");
 
-    function burnFor(address from, uint256 amount) external {
-        require(msg.sender == token.owner(), "Only LaunchPad can burn");
-        require(amount > 0, "Zero amount");
+        emit LogRefundAmount(refund);
 
-        uint256 refund = curve.getBurnRefund(token.totalSupply(), amount);
-        require(address(this).balance >= refund, "Insufficient funds");
-
-        token.burn(from, amount);
-        totalEthRaised -= refund;
-        payable(from).transfer(refund);
-
-        // emit Sell(from, amount, refund);
+        (bool success,) = seller.call{ value: refund }("");
+        require(success, "ETH refund failed");
     }
 
-    // [TODO]: Not needed for production
-    function priceOracle(bool isBuying, uint256 amount) external view returns (uint256) {
-        if (isBuying) {
-            return curve.getMintCost(token.totalSupply(), amount);
-        } else {
-            return curve.getBurnRefund(token.totalSupply(), amount);
-        }
-    }
-
-    function launchOnOcelex() public {
+    function launchOnOcelex() internal {
         require(!launched, "Already launched");
-        require(totalEthRaised >= MAX_CAP, "Auction not finished");
-
+        require(address(this).balance >= MAX_CAP, "Auction not finished");
         launched = true;
-        // emit Launch(token.name(), token.symbol(), address(token));
     }
 }
