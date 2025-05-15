@@ -63,7 +63,7 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
       setLocalOracle(fallback);
       setPriceOracleWithUnit(fallback);
     }
-  }, [amount, isBuying, totalSupply, selectedUnit, setPriceOracleWithUnit, localOracle]);
+  }, [amount, isBuying, totalSupply, selectedUnit, setPriceOracleWithUnit]);
 
   useEffect(() => {
     if (!selectedUnit || !localOracle?.valueInAllUnits?.[selectedUnit]) return;

@@ -10,7 +10,6 @@ contract BondingCurveAuction {
     address public immutable launchPad;
     bool public launched = false;
 
-    uint256 public constant MAX_CAP = 10 ether;
     uint256 public constant MIN_PRICE = 1 gwei;
     uint256 public constant FEE = 3e16; // 3% fee
 
@@ -35,7 +34,7 @@ contract BondingCurveAuction {
 
         token.mint(buyer, amountToMint);
 
-        if (address(this).balance >= MAX_CAP) {
+        if (address(this).balance >= token.maxCap()) {
             launchOnOcelex();
         }
     }
@@ -62,7 +61,7 @@ contract BondingCurveAuction {
 
     function launchOnOcelex() internal {
         require(!launched, "Already launched");
-        require(address(this).balance >= MAX_CAP, "Auction not finished");
+        require(address(this).balance >= token.maxCap(), "Auction not finished");
         launched = true;
     }
 }

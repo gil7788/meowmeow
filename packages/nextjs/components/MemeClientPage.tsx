@@ -5,11 +5,9 @@ import Link from "next/link";
 import MemeProfile from "./meme/MemeProfile";
 import MemeTabs from "./meme/MemeTabs";
 import TokenSaleCard from "./meme/TokenSaleCard";
-import MemeCoinAbi from "@/abi/MemeCoin.json";
 import { ArrowLeft } from "lucide-react";
 import { usePublicClient } from "wagmi";
-import { listenToBuyEvent } from "~~/lib/onchainEventListener";
-import type { BuyEvent, ProjectData, TokenCreatedEvent } from "~~/lib/types";
+import type { ProjectData, TokenCreatedEvent } from "~~/lib/types";
 
 const getFallbackProjectData = (id: string): ProjectData => ({
   id,
@@ -45,7 +43,6 @@ const getFallbackProjectData = (id: string): ProjectData => ({
 export default function MemeClientPage({ hash }: { hash: string }) {
   const publicClient = usePublicClient();
   const [project, setProject] = useState<ProjectData | null>(null);
-  const [supply, setSupply] = useState<number>(0);
 
   useEffect(() => {
     const fallback = getFallbackProjectData(hash);
@@ -66,42 +63,7 @@ export default function MemeClientPage({ hash }: { hash: string }) {
       image: token.image || fallback.image,
     };
 
-    const fetchTotalSupply = async () => {
-      try {
-        const supply = await publicClient.readContract({
-          address: token.tokenAddress as `0x${string}`,
-          abi: MemeCoinAbi,
-          functionName: "totalSupply",
-        });
-        const total = Number(supply);
-        setSupply(total);
-        setProject({ ...projectData, totalSupply: total });
-      } catch (e) {
-        console.warn("Could not fetch totalSupply", e);
-        setProject(projectData);
-      }
-    };
-
-    fetchTotalSupply();
-
-    const stopListening = listenToBuyEvent((event: BuyEvent) => {
-      if (event && event.buyer && token.tokenAddress === hash) {
-        const total = Number(event.totalSupply);
-        setSupply(total);
-        setProject(prev =>
-          prev
-            ? {
-                ...prev,
-                totalSupply: total,
-              }
-            : null,
-        );
-      }
-    });
-
-    return () => {
-      if (typeof stopListening === "function") stopListening();
-    };
+    setProject(projectData);
   }, [hash, publicClient]);
 
   if (!project) {
@@ -127,9 +89,9 @@ export default function MemeClientPage({ hash }: { hash: string }) {
           <div className="grid gap-8 md:grid-cols-3">
             <div className="md:col-span-2 space-y-8">
               <MemeProfile project={project} />
-              <MemeTabs meme={{ ...project, totalSupply: supply }} />
+              <MemeTabs meme={project} />
             </div>
-            <TokenSaleCard project={project} />
+            <TokenSaleCard project={project} hash={hash} />
           </div>
         </div>
       </main>

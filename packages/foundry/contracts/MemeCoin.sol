@@ -6,10 +6,10 @@ import { ERC20Permit } from "openzeppelin-contracts/contracts/token/ERC20/extens
 import { Ownable } from "openzeppelin-contracts/contracts/access/Ownable.sol";
 
 contract MemeCoin is ERC20, Ownable {
-    address public auction;
+    uint256 public maxCap;
 
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) Ownable(msg.sender) {
-        auction = msg.sender;
+    constructor(uint256 _maxCap, string memory name, string memory symbol) ERC20(name, symbol) Ownable(msg.sender) {
+        maxCap = _maxCap;
     }
 
     function mint(address to, uint256 amount) external onlyOwner {

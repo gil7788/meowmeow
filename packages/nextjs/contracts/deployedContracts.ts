@@ -26,6 +26,11 @@ const deployedContracts = {
               internalType: "struct MemeCoinFactory.TokenMetadata",
               components: [
                 {
+                  name: "maxCap",
+                  type: "uint256",
+                  internalType: "uint256",
+                },
+                {
                   name: "name",
                   type: "string",
                   internalType: "string",
@@ -54,6 +59,11 @@ const deployedContracts = {
           type: "function",
           name: "mintNewToken",
           inputs: [
+            {
+              name: "_maxCap",
+              type: "uint256",
+              internalType: "uint256",
+            },
             {
               name: "name",
               type: "string",
@@ -96,6 +106,11 @@ const deployedContracts = {
           ],
           outputs: [
             {
+              name: "maxCap",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
               name: "name",
               type: "string",
               internalType: "string",
@@ -120,7 +135,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1747185938.json",
+      deploymentFile: "run-1747299859.json",
       deploymentScript: "Deploy.s.sol",
     },
     LaunchPad: {
@@ -136,6 +151,19 @@ const deployedContracts = {
             },
           ],
           stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "MAX_CAP",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
         },
         {
           type: "function",
@@ -454,7 +482,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1747185938.json",
+      deploymentFile: "run-1747299859.json",
       deploymentScript: "Deploy.s.sol",
     },
   },
@@ -478,6 +506,11 @@ const deployedContracts = {
               type: "tuple",
               internalType: "struct MemeCoinFactory.TokenMetadata",
               components: [
+                {
+                  name: "maxCap",
+                  type: "uint256",
+                  internalType: "uint256",
+                },
                 {
                   name: "name",
                   type: "string",
@@ -507,6 +540,11 @@ const deployedContracts = {
           type: "function",
           name: "mintNewToken",
           inputs: [
+            {
+              name: "_maxCap",
+              type: "uint256",
+              internalType: "uint256",
+            },
             {
               name: "name",
               type: "string",
@@ -549,6 +587,11 @@ const deployedContracts = {
           ],
           outputs: [
             {
+              name: "maxCap",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
               name: "name",
               type: "string",
               internalType: "string",
@@ -589,6 +632,19 @@ const deployedContracts = {
             },
           ],
           stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "MAX_CAP",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
         },
         {
           type: "function",

@@ -10,9 +10,10 @@ contract BondingCurveAuctionTest is Test {
     MemeCoin public token;
     address public alice = address(0x1);
     address public bob = address(0x2);
+    uint256 MAX_CAP = 10 ether;
 
     function setUp() public {
-        token = new MemeCoin("MemeCoin", "MEME");
+        token = new MemeCoin(MAX_CAP, "MemeCoin", "MEME");
         auction = new BondingCurveAuction(token, address(this));
         token.transferOwnership(address(auction));
     }

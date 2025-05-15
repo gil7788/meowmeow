@@ -8,6 +8,7 @@ import "./MemeCoin.sol";
 contract LaunchPad {
     MemeCoinFactory public memeFactory;
     address public owner;
+    uint256 public constant MAX_CAP = 10 ether;
 
     mapping(address => address) public tokenToAuction;
     address[] public allTokens;
@@ -31,7 +32,7 @@ contract LaunchPad {
         external
         returns (MemeCoin)
     {
-        MemeCoin meme = memeFactory.mintNewToken(name, symbol, description, image);
+        MemeCoin meme = memeFactory.mintNewToken(MAX_CAP, name, symbol, description, image);
         BondingCurveAuction auction = new BondingCurveAuction(meme, address(this));
         tokenToAuction[address(meme)] = address(auction);
         allTokens.push(address(meme));
