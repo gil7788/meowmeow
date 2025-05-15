@@ -108,7 +108,7 @@ export default function LaunchPage() {
             </Link>
             <h1 className="mt-4 text-3xl font-bold tracking-tight">Submit Your Meme Coin</h1>
             <p className="mt-2 text-muted-foreground">
-              Fill out the form below to submit your meme coin for listing on MeowMoew Pad.
+              Fill out the form below to submit your meme coin for listing on MeowMeow Pad.
             </p>
           </div>
 
@@ -181,7 +181,7 @@ export default function LaunchPage() {
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <div className="container mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between">
-          <p className="text-xs text-muted-foreground">© 2023 MeowMoew Pad. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">© 2023 MeowMeow Pad. All rights reserved.</p>
           <nav className="flex gap-4 sm:gap-6">
             <Link className="text-xs hover:underline underline-offset-4" href="#">
               Terms of Service
