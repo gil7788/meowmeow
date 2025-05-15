@@ -125,7 +125,7 @@ export const Header = () => {
           <div className="flex flex-col">
             {/* <span className="font-bold leading-tight">Scaffold-ETH</span>
             <span className="text-xs">Ethereum dev stack</span> */}
-            <span className="ml-2 text-xl font-bold">MeowMoew Pad</span>
+            <span className="ml-2 text-xl font-bold">MeowMeow Pad</span>
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
