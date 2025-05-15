@@ -104,6 +104,16 @@ If the Garfield testnet supports contract verification, you can add `--verify` t
 
 
 
+## Generate ABI
+```bash
+cd packages/foundry
+```
+```bash
+forge build --contracts contracts/<CONTRACT>.sol
+```
+```bash
+jq '.abi' out/<CONTRACT>.sol/<CONTRACT>.json > ../nextjs/abi/<CONTRACT>.json
+```
 ## Documentation
 
 Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.

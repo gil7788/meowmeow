@@ -5,6 +5,7 @@ import "./MemeCoin.sol";
 
 contract MemeCoinFactory {
     struct TokenMetadata {
+        uint256 maxCap;
         string name;
         string symbol;
         string description;
@@ -13,17 +14,21 @@ contract MemeCoinFactory {
 
     mapping(address => TokenMetadata) public tokenMetadata;
 
-    function mintNewToken(string memory name, string memory symbol, string memory description, string memory image)
-        external
-        returns (MemeCoin)
-    {
-        MemeCoin newToken = new MemeCoin(name, symbol);
+    function mintNewToken(
+        uint256 _maxCap,
+        string memory name,
+        string memory symbol,
+        string memory description,
+        string memory image
+    ) external returns (MemeCoin) {
+        MemeCoin newToken = new MemeCoin(_maxCap, name, symbol);
 
         newToken.transferOwnership(msg.sender);
 
         address tokenAddr = address(newToken);
 
-        tokenMetadata[tokenAddr] = TokenMetadata({ name: name, symbol: symbol, description: description, image: image });
+        tokenMetadata[tokenAddr] =
+            TokenMetadata({ maxCap: _maxCap, name: name, symbol: symbol, description: description, image: image });
 
         return newToken;
     }

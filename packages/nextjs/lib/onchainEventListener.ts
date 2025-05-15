@@ -109,7 +109,7 @@ export function listenToBuyEvent(onEvent: (event: BuyEvent) => void): () => void
 
 export async function publicFetch(
   publicClient: ReturnType<typeof usePublicClient>,
-  tokenAddress: string,
+  contractAddress: string,
   functionName: string,
   tokenAbi: any,
   args: any[] = [],
@@ -119,13 +119,13 @@ export async function publicFetch(
       console.error(`Public client is undefined`);
     }
     const result = await publicClient!.readContract({
-      address: tokenAddress as `0x${string}`,
+      address: contractAddress as `0x${string}`,
       abi: tokenAbi,
       functionName: functionName,
       args: args,
     });
     return result;
   } catch (e) {
-    console.error(`Failed to fetch ${functionName} from ${tokenAddress}:`, e);
+    console.error(`Failed to fetch ${functionName} from ${contractAddress}:`, e);
   }
 }
