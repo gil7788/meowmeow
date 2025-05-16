@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormattedEthUnits } from "@/utils/ethUnits";
 
 interface EstimatedCostProps {
@@ -75,19 +76,27 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
       <Label htmlFor="receive">Cost (estimated)</Label>
       <div className="flex gap-2">
         <Input id="receive" type="text" className="flex-1" value={displayPrice} readOnly />
-        <select
-          className="w-24 border rounded-md text-sm bg-background text-foreground"
-          value={selectedUnit}
-          onChange={e => {
-            setSelectedUnit(e.target.value);
-          }}
-        >
-          {FormattedEthUnits.getAllUnits().map(unit => (
-            <option key={unit} value={unit}>
-              {unit}
-            </option>
-          ))}
-        </select>
+        <Select value={selectedUnit} onValueChange={setSelectedUnit}>
+          <SelectTrigger className="w-24 font-bold text-foreground border border-border shadow-md justify-center rounded-md">
+            <SelectValue />
+          </SelectTrigger>
+
+          <SelectContent
+            className="bg-white text-foreground border border-border shadow-md z-50 rounded-md"
+            position="popper"
+            sideOffset={4}
+          >
+            {FormattedEthUnits.getAllUnits().map(unit => (
+              <SelectItem
+                key={unit}
+                value={unit}
+                className="font-bold text-center hover:bg-yellow-400 focus:bg-yellow-400 focus:text-black"
+              >
+                {unit.toUpperCase()}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
