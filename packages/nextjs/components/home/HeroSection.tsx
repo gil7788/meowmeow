@@ -11,15 +11,15 @@ export const HeroSection = () => (
         Launch Your Meme Coin on Zircuit Network
       </h1>
       <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-        The purr-fect launchpad for meme coins. Join the next generation of viral tokens on Zircuit Network.
+        The purr-fect launchpad for meme coins. Join the next generation of viral tokens on Zircuit Network!
       </p>
       <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
         <Button size="lg">
-          Explore Meme Coins
+          I&apos;m Feeling Lucky!
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
         <Button size="lg" variant="outline" asChild>
-          <Link href="/launch">Submit Your Meme</Link>
+          <Link href="/launch">Launch Your Meme</Link>
         </Button>
       </div>
     </div>
