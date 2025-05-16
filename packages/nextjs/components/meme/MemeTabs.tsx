@@ -10,7 +10,6 @@ import { ProjectData } from "~~/lib/types";
 export default function MemeTabs({ meme }: { meme: ProjectData }) {
   const [isBuying, setIsBuying] = useState(true);
   const [amount, setAmount] = useState("");
-  const [totalSupply, setTotalSupply] = useState(meme.totalSupply);
 
   const toggleTradeDirection = () => {
     setIsBuying(prev => !prev);
@@ -38,8 +37,6 @@ export default function MemeTabs({ meme }: { meme: ProjectData }) {
           setAmount={setAmount}
           tokenSymbol={meme.tokenSymbol}
           tokenAddress={meme.id}
-          totalSupply={totalSupply}
-          setTotalSupply={setTotalSupply}
         />
       </TabsContent>
 

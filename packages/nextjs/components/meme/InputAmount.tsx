@@ -23,7 +23,7 @@ export const InputAmount: React.FC<InputAmountProps> = ({ amount, setAmount, tok
           value={amount}
           onChange={e => setAmount(e.target.value)}
         />
-        <Button variant="outline" className="w-24">
+        <Button variant="outline" className="w-24 font-bold">
           {tokenSymbol}
         </Button>
       </div>

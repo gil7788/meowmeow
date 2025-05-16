@@ -35,7 +35,7 @@ export default function MemeProfile({ project }: { project: ProjectData }) {
             {project.status === "live" ? "LIVE" : project.status.toUpperCase()}
           </div>
         </div>
-        <p className="text-muted-foreground">{project.description}</p>
+        <p className="text-muted-foreground">{project.tokenSymbol}</p>
       </div>
     </div>
   );

@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import AuctionAbi from "@/abi/BondingCurveAuction.json";
 import MemeCoinAbi from "@/abi/MemeCoin.json";
-import { CountdownTimer } from "@/components/countdown-timer";
-import { Button } from "@/components/ui/button";
+import { TokenBalance } from "@/components/meme/TokenBalance";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { useTokenBalance } from "@/hooks/useTokenBalance";
 import { ProjectData } from "@/lib/types";
-import { Calendar, Clock, Users } from "lucide-react";
 import { formatEther } from "viem";
 import { usePublicClient } from "wagmi";
 import { publicFetch } from "~~/lib/onchainEventListener";
@@ -56,13 +55,10 @@ function useTokenEthBalance(tokenAddress: string) {
 
   return { raisedEth, ethMaxCap, progress };
 }
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-};
 
 export default function TokenSaleCard({ project, hash }: { project: ProjectData; hash: string }) {
   const { raisedEth, ethMaxCap, progress } = useTokenEthBalance(hash);
+  const { totalSupply, userBalance, symbol } = useTokenBalance(hash); // hash is the token address
 
   return (
     <div className="space-y-6">
@@ -80,74 +76,20 @@ export default function TokenSaleCard({ project, hash }: { project: ProjectData;
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              {/* <span>Raised: {raisedEth.toString()} ETH</span> */}
               <span>
-                Raised: <b> {parseFloat(raisedEth.toString()).toFixed(2)} ETH </b>{" "}
+                Raised: <b>{parseFloat(raisedEth.toString()).toFixed(2)} ETH</b>
               </span>
               <span>
-                {" "}
-                Goal: <b> {ethMaxCap.toString()} ETH </b>
+                Goal: <b>{ethMaxCap.toString()} ETH</b>
               </span>
             </div>
             <Progress value={parseFloat(progress.toString())} className="h-2" />
             <div className="text-xs text-right text-muted-foreground">{progress.toFixed(2)}% Complete</div>
           </div>
 
-          <div className="space-y-2">
-            {project.status === "live" ? (
-              <>
-                <div className="text-sm font-medium">Ends in</div>
-                <CountdownTimer targetDate={project.endDate} />
-              </>
-            ) : project.status === "upcoming" ? (
-              <>
-                <div className="text-sm font-medium">Starts in</div>
-                <CountdownTimer targetDate={project.startDate} />
-              </>
-            ) : (
-              <div className="text-sm font-medium text-muted-foreground">Sale completed</div>
-            )}
-          </div>
-
           <Separator />
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>Start Date</span>
-              </div>
-              <div className="text-right">{formatDate(project.startDate)}</div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>End Date</span>
-              </div>
-              <div className="text-right">{formatDate(project.endDate)}</div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>Duration</span>
-              </div>
-              <div className="text-right">
-                {Math.ceil(
-                  (new Date(project.endDate).getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24),
-                )}{" "}
-                days
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span>Participants</span>
-              </div>
-              <div className="text-right">1,245</div>
-            </div>
-
-            <Button className="w-full" disabled={project.status === "completed"}>
-              {project.status === "upcoming"
-                ? "Remind Me"
-                : project.status === "live"
-                  ? "Participate Now"
-                  : "Sale Ended"}
-            </Button>
-          </div>
+          <TokenBalance totalSupply={totalSupply} userBalance={userBalance} tokenSymbol={symbol} />
         </CardContent>
       </Card>
     </div>
