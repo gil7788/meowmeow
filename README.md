@@ -115,7 +115,6 @@ This command will deploy your contract(s) to the Garfield testnet using Foundry.
 If the Garfield testnet supports contract verification, you can add `--verify` to the deploy command.
 
 
-
 ## Generate ABI
 ```bash
 cd packages/foundry

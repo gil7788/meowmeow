@@ -1,20 +1,41 @@
 import { parseBuyLog, parseTokenCreatedLog } from "./onchainEventParser";
-import { env } from "@/lib/env";
 import { BuyEvent, TokenCreatedEvent } from "@/lib/types";
 import { ethers } from "ethers";
 import { usePublicClient } from "wagmi";
 import deployedContracts from "~~/contracts/deployedContracts";
+import scaffoldConfig from "~~/scaffold.config";
 
-const chainId = env.network.chainId as keyof typeof deployedContracts;
-const LAUNCHPAD_ADDRESS = deployedContracts[chainId].LaunchPad.address;
-const LAUNCHPAD_ABI = deployedContracts[chainId].LaunchPad.abi;
+const targetChain = scaffoldConfig.targetNetworks[0];
+const chainId = targetChain.id;
+const chainIdStr = String(chainId);
 
-function getHttpProvider(): ethers.JsonRpcProvider {
-  return new ethers.JsonRpcProvider(env.network.rpcUrl);
+if (!(chainIdStr in deployedContracts)) {
+  throw new Error(`❌ Chain ID ${chainIdStr} not found in deployedContracts`);
 }
 
-function getWebSocketProvider(): ethers.WebSocketProvider {
-  return new ethers.WebSocketProvider(env.network.wsUrl);
+const { LaunchPad } = (deployedContracts as Record<string, any>)[chainIdStr];
+const LAUNCHPAD_ADDRESS = LaunchPad?.address;
+const LAUNCHPAD_ABI = LaunchPad?.abi;
+
+if (!LAUNCHPAD_ADDRESS || !LAUNCHPAD_ABI) {
+  throw new Error(`❌ Missing LaunchPad details for chain ID ${chainIdStr}`);
+}
+
+function getRpcUrl(): string {
+  const targetChain = scaffoldConfig.targetNetworks[0];
+  const override = scaffoldConfig.rpcOverrides?.[targetChain.id];
+  const fallback = targetChain.rpcUrls?.default?.http?.[0];
+
+  if (override) return override;
+  if (fallback) return fallback;
+
+  throw new Error(`❌ No RPC URL found for chainId ${targetChain.id}`);
+}
+
+function getHttpProvider(): ethers.JsonRpcProvider {
+  const rpcUrl = getRpcUrl();
+  console.log(`🔗 Using RPC URL: ${rpcUrl}`);
+  return new ethers.JsonRpcProvider(rpcUrl);
 }
 
 export async function getAllRecentTokenCreatedEvents(
@@ -61,7 +82,7 @@ export async function getAllRecentBuyEvents(searchInterval: number, maxEvents: n
 }
 
 export function listenToTokenCreated(onEvent: (event: TokenCreatedEvent) => void): () => void {
-  const provider = getWebSocketProvider();
+  const provider = getHttpProvider();
   const contract = new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, provider);
 
   const handler = (
@@ -86,7 +107,7 @@ export function listenToTokenCreated(onEvent: (event: TokenCreatedEvent) => void
 }
 
 export function listenToBuyEvent(onEvent: (event: BuyEvent) => void): () => void {
-  const provider = getWebSocketProvider();
+  const provider = getHttpProvider();
   const contract = new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, provider);
 
   const handler = (

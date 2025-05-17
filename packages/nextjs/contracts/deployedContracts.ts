@@ -488,7 +488,7 @@ const deployedContracts = {
   },
   48898: {
     MemeCoinFactory: {
-      address: "0xeea73dcffd25acd0ed67fa98948c0bd641bd87eb",
+      address: "0x559d4a81e50df2141Fa5Fa6e61BA1207F139a7A7",
       abi: [
         {
           type: "function",
@@ -620,7 +620,7 @@ const deployedContracts = {
       deploymentScript: "Deploy.s.sol",
     },
     LaunchPad: {
-      address: "0xde51a0a20be1d28e24b50ec429071ca6264b0e88",
+      address: "0x78515E569aE95e861a26e49F75B21d08E582cF16",
       abi: [
         {
           type: "constructor",
