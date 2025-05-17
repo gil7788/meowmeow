@@ -96,6 +96,18 @@ forge script script/Deploy.s.sol:DeployScript \
   --chain 48898
 ```
 
+For multiple contracts:
+
+```bash
+forge script script/Deploy.s.sol:DeployScript \
+  --rpc-url https://garfield-testnet.zircuit.com/ \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --chain 48898 \
+  --slow \
+  --skip-simulation
+```
+
 This command will deploy your contract(s) to the Garfield testnet using Foundry.
 
 3. **(Optional) Verify your contract**
