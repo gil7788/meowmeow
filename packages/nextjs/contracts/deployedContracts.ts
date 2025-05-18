@@ -135,7 +135,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1747450463.json",
+      deploymentFile: "run-1747536420.json",
       deploymentScript: "Deploy.s.sol",
     },
     LaunchPad: {
@@ -482,13 +482,13 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1747450463.json",
+      deploymentFile: "run-1747536420.json",
       deploymentScript: "Deploy.s.sol",
     },
   },
   48898: {
     MemeCoinFactory: {
-      address: "0x559d4a81e50df2141Fa5Fa6e61BA1207F139a7A7",
+      address: "0x559d4a81e50df2141fa5fa6e61ba1207f139a7a7",
       abi: [
         {
           type: "function",
@@ -616,11 +616,11 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1747045962.json",
+      deploymentFile: "run-1747453584.json",
       deploymentScript: "Deploy.s.sol",
     },
     LaunchPad: {
-      address: "0x78515E569aE95e861a26e49F75B21d08E582cF16",
+      address: "0x78515e569ae95e861a26e49f75b21d08e582cf16",
       abi: [
         {
           type: "constructor",
@@ -963,7 +963,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1747045962.json",
+      deploymentFile: "run-1747453584.json",
       deploymentScript: "Deploy.s.sol",
     },
   },

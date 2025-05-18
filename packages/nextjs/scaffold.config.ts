@@ -1,24 +1,28 @@
-import { Chain } from "viem";
 import * as chains from "viem/chains";
 import { env } from "~~/env";
-import { customChainMap } from "~~/utils/customChains";
+import { zircuitTestnet } from "~~/utils/customChains";
 
 export type ScaffoldConfig = {
   targetNetworks: readonly chains.Chain[];
   pollingInterval: number;
   alchemyApiKey: string;
-  rpcOverrides?: Record<number, string>;
+  rpcOverrides?: Record<string, string>;
   walletConnectProjectId: string;
   onlyLocalBurnerWallet: boolean;
 };
 
 export const DEFAULT_ALCHEMY_API_KEY = "oKxs-03sij-U_N0iOlrSsZFr29-IqbuF";
 
-const selected = customChainMap[env.networkEnv];
-const selectedChain: Chain = selected?.chain ?? chains.foundry;
-
-if (!selected) {
-  console.warn(`⚠️ No chain config found for "${env.networkEnv}", falling back to Foundry (31337)`);
+let selectedChain;
+if (env.networkEnv === "main" || env.networkEnv === "mainnet") {
+  selectedChain = chains.zircuit;
+} else if (env.networkEnv === "test" || env.networkEnv === "testnet") {
+  selectedChain = zircuitTestnet;
+} else {
+  selectedChain = chains.foundry;
+  if (env.networkEnv !== "local" && env.networkEnv !== "localnet") {
+    console.warn(`⚠️ No chain config found for "${env.networkEnv}", falling back to Foundry (31337)`);
+  }
 }
 
 const rpcUrl = selectedChain.rpcUrls?.default?.http?.[0];
@@ -26,8 +30,8 @@ if (!rpcUrl) {
   throw new Error(`❌ No RPC URL found for selected chain ID ${selectedChain.id}`);
 }
 
-const rpcOverrides: Record<number, string> = {
-  [selectedChain.id]: rpcUrl,
+const rpcOverrides: Record<string, string> = {
+  [selectedChain.id.toString()]: rpcUrl,
 };
 
 console.log("SelectedChain:", selectedChain);
@@ -35,6 +39,7 @@ console.log("SelectedChain:", selectedChain);
 const scaffoldConfig = {
   // The networks on which your DApp is live
   targetNetworks: [selectedChain],
+  // targetNetworks: [chains.foundry],
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect if you only target the local network (default is 4000)
