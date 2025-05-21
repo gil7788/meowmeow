@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Cat } from "lucide-react";
 import { hardhat } from "viem/chains";
+import { foundry } from "viem/chains";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
@@ -31,34 +32,18 @@ export const menuLinks: HeaderMenuLink[] = [
   },
 ];
 
-// <header className="px-4 lg:px-6 h-14 flex items-center border-b">
-//   <div className="container mx-auto max-w-5xl flex items-center justify-between w-full">
-//     <Link className="flex items-center justify-center" href="/">
-
-//     </Link>
-//     <div className="flex items-center">
-//       <nav className="flex gap-4 sm:gap-6 mr-4">
-//         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-//           Launches
-//         </Link>
-//         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-//           Projects
-//         </Link>
-//         <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-//           Learn
-//         </Link>
-//       </nav>
-
-//     </div>
-//   </div>
-// </header>
-
 export const HeaderMenuLinks = () => {
   const pathname = usePathname();
+  const { targetNetwork } = useTargetNetwork();
+  console.log(`targetNetwork.id: ${targetNetwork.id}`);
+  const isLocalNetwork = targetNetwork.id === foundry.id;
+  console.log(`isLocalNetwork: ${isLocalNetwork}`);
+
+  const filteredLinks = menuLinks.filter(link => link.href !== "/debug" || (isLocalNetwork && link.href == "/debug"));
 
   return (
     <>
-      {menuLinks.map(({ label, href, icon }) => {
+      {filteredLinks.map(({ label, href, icon }) => {
         const isActive = pathname === href;
         return (
           <li key={href}>
