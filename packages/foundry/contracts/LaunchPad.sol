@@ -4,14 +4,19 @@ pragma solidity ^0.8.26;
 import "./BondingCurveAuction.sol";
 import "./MemeCoinFactory.sol";
 import "./MemeCoin.sol";
+import "./MemeQueue.sol";
 
 contract LaunchPad {
     MemeCoinFactory public memeFactory;
     address public owner;
     uint256 public constant MAX_CAP = 10 ether;
+    uint256 private constant RECENT_MEMES_CAPS = 50;
+    uint256 private constant FEATURED_MEMES_CAPS = 8;
+    uint256 private constant FEATURED_MARKET_CAP_THRESHOLD = 5 ether;
 
     mapping(address => address) public tokenToAuction;
-    address[] public allTokens;
+    MemeQueue public recentTokens;
+    MemeQueue public featuredTokens;
 
     event Buy(address indexed buyer, uint256 amount, uint256 price, uint256 tokenTotalSupply);
     event Sell(address indexed seller, uint256 amount, uint256 refund);
@@ -26,6 +31,9 @@ contract LaunchPad {
     constructor(address _memeFactory) {
         owner = msg.sender;
         memeFactory = MemeCoinFactory(_memeFactory);
+
+        recentTokens = new MemeQueue(RECENT_MEMES_CAPS);
+        featuredTokens = new MemeQueue(FEATURED_MEMES_CAPS);
     }
 
     function launchNewMeme(string memory name, string memory symbol, string memory description, string memory image)
@@ -33,20 +41,37 @@ contract LaunchPad {
         returns (MemeCoin)
     {
         MemeCoin meme = memeFactory.mintNewToken(MAX_CAP, name, symbol, description, image);
+        address memeAddress = address(meme);
         BondingCurveAuction auction = new BondingCurveAuction(meme, address(this));
-        tokenToAuction[address(meme)] = address(auction);
-        allTokens.push(address(meme));
+        tokenToAuction[memeAddress] = address(auction);
 
+        recentTokens.addMeme(meme);
         meme.transferOwnership(address(auction));
-        emit TokenCreated(msg.sender, address(meme), name, symbol, description, image);
+
+        emit TokenCreated(msg.sender, memeAddress, name, symbol, description, image);
         return meme;
     }
 
     function buy(address token, uint256 amount) external payable {
         address payable auction = payable(tokenToAuction[token]);
         require(auction != address(0), "Invalid token");
+        MemeCoin meme = MemeCoin(token);
+
         BondingCurveAuction(auction).buy{ value: msg.value }(msg.sender, amount);
-        emit Buy(msg.sender, amount, msg.value, MemeCoin(token).totalSupply());
+        emit Buy(msg.sender, amount, msg.value, meme.totalSupply());
+        updateFeatured(meme);
+    }
+
+    function updateFeatured(MemeCoin meme) private {
+        if (meme.totalSupply() > FEATURED_MARKET_CAP_THRESHOLD && !isFeatured(meme)) {
+            featuredTokens.addMeme(meme);
+        } else if (featuredTokens.length() < FEATURED_MEMES_CAPS) {
+            featuredTokens.addMeme(meme);
+        }
+    }
+
+    function isFeatured(MemeCoin meme) private view returns (bool) {
+        return featuredTokens.contains(meme);
     }
 
     function sell(address token, uint256 amount) external {
@@ -62,9 +87,5 @@ contract LaunchPad {
 
     function getAuction(address token) external view returns (address) {
         return tokenToAuction[token];
-    }
-
-    function getAllTokens() external view returns (address[] memory) {
-        return allTokens;
     }
 }
