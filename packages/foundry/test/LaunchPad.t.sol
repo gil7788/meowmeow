@@ -25,20 +25,13 @@ contract LaunchPadTest is Test {
         string memory description = "Test Desc";
         string memory image = "img.png";
 
-        launchPad.launchNewMeme(name, symbol, description, image);
+        MemeCoin token = launchPad.launchNewMeme(name, symbol, description, image);
+        assertEq(launchPad.recentTokens().length(), 1);
 
-        address[] memory tokens = launchPad.getAllTokens();
-        console.log("Token count: %s", tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
-            console.log("Token %s: %s", i, tokens[i]);
-        }
-        assertEq(tokens.length, 1);
-
-        address memeToken = tokens[0];
+        address memeToken = address(token);
         address auction = launchPad.getAuction(memeToken);
         assertTrue(auction != address(0), "Auction should be deployed");
 
-        MemeCoin token = MemeCoin(memeToken);
         assertEq(token.owner(), auction);
     }
 
@@ -49,17 +42,11 @@ contract LaunchPadTest is Test {
         string memory description = "Test Desc";
         string memory image = "img.png";
 
+        MemeCoin token0 = launchPad.launchNewMeme(name, symbol, description, image);
         launchPad.launchNewMeme(name, symbol, description, image);
-        launchPad.launchNewMeme(name, symbol, description, image);
+        assertEq(launchPad.recentTokens().length(), 2);
 
-        address[] memory tokens = launchPad.getAllTokens();
-        console.log("Token count: %s", tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
-            console.log("Token %s: %s", i, tokens[i]);
-        }
-        assertEq(tokens.length, 2);
-
-        address memeToken = tokens[0];
+        address memeToken = address(token0);
         address auction = launchPad.getAuction(memeToken);
         assertTrue(auction != address(0), "Auction should be deployed");
 
@@ -73,12 +60,10 @@ contract LaunchPadTest is Test {
         string memory description = "Test Desc";
         string memory image = "img.png";
 
-        launchPad.launchNewMeme(name, symbol, description, image);
+        MemeCoin token0 = launchPad.launchNewMeme(name, symbol, description, image);
+        assertEq(launchPad.recentTokens().length(), 1);
 
-        address[] memory tokens = launchPad.getAllTokens();
-        assertEq(tokens.length, 1);
-
-        address memeToken = tokens[0];
+        address memeToken = address(token0);
         address auction = launchPad.getAuction(memeToken);
         assertTrue(auction != address(0), "Auction should be deployed");
 
