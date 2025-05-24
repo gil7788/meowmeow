@@ -33,7 +33,7 @@ contract MemeQueueTest is Test {
         memeQueue.addMeme(meme1);
         memeQueue.addMeme(meme2);
         memeQueue.addMeme(meme3);
-        memeQueue.addMeme(meme4); // should remove meme1
+        memeQueue.addMeme(meme4);
 
         assertEq(memeQueue.length(), CAPACITY);
         assertFalse(memeQueue.contains(meme1));
@@ -44,5 +44,14 @@ contract MemeQueueTest is Test {
         address notAMeme = address(0xBEEF);
         vm.expectRevert();
         memeQueue.addMeme(MemeCoin(notAMeme));
+    }
+
+    function testEmptyLength() public view {
+        assertEq(memeQueue.length(), 0);
+    }
+
+    function testSingleItemLength() public {
+        memeQueue.addMeme(meme4);
+        assertEq(memeQueue.length(), 1);
     }
 }

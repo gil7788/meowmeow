@@ -135,7 +135,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1747536420.json",
+      deploymentFile: "run-1748113752.json",
       deploymentScript: "Deploy.s.sol",
     },
     LaunchPad: {
@@ -167,25 +167,6 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "allTokens",
-          inputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
           name: "buy",
           inputs: [
             {
@@ -204,13 +185,13 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "getAllTokens",
+          name: "featuredTokens",
           inputs: [],
           outputs: [
             {
               name: "",
-              type: "address[]",
-              internalType: "address[]",
+              type: "address",
+              internalType: "contract MemeQueue",
             },
           ],
           stateMutability: "view",
@@ -230,6 +211,58 @@ const deployedContracts = {
               name: "",
               type: "address",
               internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getFeaturedTokenAddresses",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "address[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getFeaturedTokens",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "contract MemeCoin[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getRecentTokenAddresses",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "address[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getRecentTokens",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "contract MemeCoin[]",
             },
           ],
           stateMutability: "view",
@@ -290,6 +323,19 @@ const deployedContracts = {
               name: "",
               type: "address",
               internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "recentTokens",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "contract MemeQueue",
             },
           ],
           stateMutability: "view",
@@ -482,7 +528,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1747536420.json",
+      deploymentFile: "run-1748113752.json",
       deploymentScript: "Deploy.s.sol",
     },
   },
@@ -648,25 +694,6 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "allTokens",
-          inputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
           name: "buy",
           inputs: [
             {
@@ -685,13 +712,13 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "getAllTokens",
+          name: "featuredTokens",
           inputs: [],
           outputs: [
             {
               name: "",
-              type: "address[]",
-              internalType: "address[]",
+              type: "address",
+              internalType: "contract MemeQueue",
             },
           ],
           stateMutability: "view",
@@ -711,6 +738,58 @@ const deployedContracts = {
               name: "",
               type: "address",
               internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getFeaturedTokenAddresses",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "address[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getFeaturedTokens",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "contract MemeCoin[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getRecentTokenAddresses",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "address[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getRecentTokens",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "contract MemeCoin[]",
             },
           ],
           stateMutability: "view",
@@ -771,6 +850,19 @@ const deployedContracts = {
               name: "",
               type: "address",
               internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "recentTokens",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "contract MemeQueue",
             },
           ],
           stateMutability: "view",
