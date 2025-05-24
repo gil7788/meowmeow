@@ -5,13 +5,14 @@ import "./BondingCurveAuction.sol";
 import "./MemeCoinFactory.sol";
 import "./MemeCoin.sol";
 import "./MemeQueue.sol";
+import "forge-std/console.sol";
 
 contract LaunchPad {
     MemeCoinFactory public memeFactory;
     address public owner;
     uint256 public constant MAX_CAP = 10 ether;
     uint256 private constant RECENT_MEMES_CAPS = 50;
-    uint256 private constant FEATURED_MEMES_CAPS = 8;
+    uint256 private constant FEATURED_MEMES_CAPS = 2;
     uint256 private constant FEATURED_MARKET_CAP_THRESHOLD = 5 ether;
 
     mapping(address => address) public tokenToAuction;
@@ -48,25 +49,41 @@ contract LaunchPad {
         recentTokens.addMeme(meme);
         meme.transferOwnership(address(auction));
 
-        updateFeatured(meme);
+        updateFeatured(meme, auction);
         emit TokenCreated(msg.sender, memeAddress, name, symbol, description, image);
         return meme;
     }
 
     function buy(address token, uint256 amount) external payable {
-        address payable auction = payable(tokenToAuction[token]);
-        require(auction != address(0), "Invalid token");
+        address payable auctionAddress = payable(tokenToAuction[token]);
+        require(auctionAddress != address(0), "Invalid token");
         MemeCoin meme = MemeCoin(token);
+        BondingCurveAuction auction = BondingCurveAuction(auctionAddress);
 
-        BondingCurveAuction(auction).buy{ value: msg.value }(msg.sender, amount);
+        auction.buy{ value: msg.value }(msg.sender, amount);
+        console.log("meme.balance: ", auctionAddress.balance);
+        updateFeatured(meme, auction);
         emit Buy(msg.sender, amount, msg.value, meme.totalSupply());
     }
 
-    function updateFeatured(MemeCoin meme) private {
+    function sell(address token, uint256 amount) external {
+        address payable auctionAddress = payable(tokenToAuction[token]);
+        require(auctionAddress != address(0), "Invalid token");
+        MemeCoin meme = MemeCoin(token);
+        BondingCurveAuction auction = BondingCurveAuction(auctionAddress);
+
+        meme.transferFrom(msg.sender, address(this), amount);
+        auction.burnAndRefund(msg.sender, address(this), amount);
+        updateFeatured(meme, auction);
+        emit Sell(msg.sender, amount, meme.totalSupply());
+    }
+
+    function updateFeatured(MemeCoin meme, BondingCurveAuction auction) private {
         bool alreadyFeatured = isFeatured(meme);
 
         if (!alreadyFeatured) {
-            if (meme.totalSupply() > FEATURED_MARKET_CAP_THRESHOLD || featuredTokens.length() < FEATURED_MEMES_CAPS) {
+            console.log("alreadyFeatured: ", alreadyFeatured);
+            if (address(auction).balance > FEATURED_MARKET_CAP_THRESHOLD || featuredTokens.length() < FEATURED_MEMES_CAPS) {
                 featuredTokens.addMeme(meme);
             }
         }
@@ -76,16 +93,6 @@ contract LaunchPad {
         return featuredTokens.contains(meme);
     }
 
-    function sell(address token, uint256 amount) external {
-        address payable auction = payable(tokenToAuction[token]);
-        require(auction != address(0), "Invalid token");
-        MemeCoin meme = MemeCoin(token);
-
-        meme.transferFrom(msg.sender, address(this), amount);
-
-        BondingCurveAuction(auction).burnAndRefund(msg.sender, address(this), amount);
-        emit Sell(msg.sender, amount, meme.totalSupply());
-    }
 
     function getAuction(address token) external view returns (address) {
         return tokenToAuction[token];

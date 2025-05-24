@@ -91,4 +91,87 @@ contract LaunchPadTest is Test {
 
         assertEq(featured[0], address(token), "Featured token should be the launched token");
     }
+
+    // [TODO]: Consider to pass max featured coins as an parameter to launchpad
+    function testFeaturedCapUnderThresholdGetsAdded() public {
+        // Fill featured queue to 7 (under cap)
+        for (uint256 i = 0; i < 7; i++) {
+            string memory name = string.concat("Token", vm.toString(i));
+            launchPad.launchNewMeme(name, "SYM", "desc", "img.png");
+        }
+
+        // Launch 8th token with 0 supply (won't pass market cap threshold)
+        MemeCoin lowCap = launchPad.launchNewMeme("LowCap", "LC", "desc", "img.png");
+
+        address[] memory featured = launchPad.getFeaturedTokenAddresses();
+        assertEq(featured.length, 8);
+        assertEq(featured[7], address(lowCap));
+    }
+
+    function testFeaturedCapReachedLowSupplyGetsIgnored() public {
+        // Fill up to 8 featured tokens
+        for (uint256 i = 0; i < 8; i++) {
+            string memory name = string.concat("Token", vm.toString(i));
+            launchPad.launchNewMeme(name, "SYM", "desc", "img.png");
+        }
+
+        // Attempt to add a 9th with low supply (not above threshold)
+        MemeCoin extra = launchPad.launchNewMeme("Extra", "EXT", "desc", "img.png");
+        address[] memory featured = launchPad.getFeaturedTokenAddresses();
+        assertEq(featured.length, 8);
+        for (uint256 i = 0; i < 8; i++) {
+            assertTrue(featured[i] != address(extra));
+        }
+    }
+
+    function testFeaturedCapReachedHighSupplyGetsAdded() public {
+        for (uint256 i = 0; i < 8; i++) {
+            string memory name = string.concat("Token", vm.toString(i));
+            launchPad.launchNewMeme(name, "SYM", "desc", "img.png");
+        }
+
+        MemeCoin highCap = launchPad.launchNewMeme("High", "HGH", "desc", "img.png");
+        BondingCurveAuction auction = BondingCurveAuction(payable(launchPad.getAuction(address(highCap))));
+        vm.deal(user, 10 ether);
+        vm.startPrank(user);
+        uint256 amounToBuy = 2500000;
+        uint256 cost = auction.curve().getMintCost(0, amounToBuy);
+        launchPad.buy{ value: cost }(address(highCap), amounToBuy);
+        vm.stopPrank();
+
+        address[] memory featured = launchPad.getFeaturedTokenAddresses();
+        assertEq(featured.length, 8); // Surpasses threshold despite queue cap
+        assertEq(featured[7], address(highCap));
+    }
+
+    function testAlreadyFeaturedTokenIsNotReadded() public {
+        MemeCoin token = launchPad.launchNewMeme("Dup", "DUP", "desc", "img.png");
+        BondingCurveAuction auction = BondingCurveAuction(payable(launchPad.getAuction(address(token))));
+        vm.deal(user, 10 ether);
+        vm.startPrank(user);
+        uint256 amounToBuy = 2500000;
+        uint256 cost = auction.curve().getMintCost(0, amounToBuy);
+        launchPad.buy{ value: cost }(address(token), amounToBuy);
+        vm.stopPrank();
+
+        address[] memory featuredBefore = launchPad.getFeaturedTokenAddresses();
+        uint256 amountToBuy2 = 1;
+        launchPad.buy{ value: cost }(address(token), amountToBuy2);
+        address[] memory featuredAfter = launchPad.getFeaturedTokenAddresses();
+        assertEq(featuredBefore.length, featuredAfter.length);
+        assertEq(featuredBefore[0], featuredAfter[0]);
+    }
+
+    function testEdgeCaseExactly8LowCapTokenIgnored() public {
+        for (uint256 i = 0; i < 8; i++) {
+            string memory name = string.concat("Token", vm.toString(i));
+            launchPad.launchNewMeme(name, "SYM", "desc", "img.png");
+        }
+        MemeCoin ignored = launchPad.launchNewMeme("Ignored", "IGN", "desc", "img.png");
+        address[] memory featured = launchPad.getFeaturedTokenAddresses();
+        assertEq(featured.length, 8);
+        for (uint256 i = 0; i < 8; i++) {
+            assertTrue(featured[i] != address(ignored));
+        }
+    }
 }
