@@ -48,6 +48,7 @@ contract LaunchPad {
         recentTokens.addMeme(meme);
         meme.transferOwnership(address(auction));
 
+        updateFeatured(meme);
         emit TokenCreated(msg.sender, memeAddress, name, symbol, description, image);
         return meme;
     }
@@ -59,14 +60,15 @@ contract LaunchPad {
 
         BondingCurveAuction(auction).buy{ value: msg.value }(msg.sender, amount);
         emit Buy(msg.sender, amount, msg.value, meme.totalSupply());
-        updateFeatured(meme);
     }
 
     function updateFeatured(MemeCoin meme) private {
-        if (meme.totalSupply() > FEATURED_MARKET_CAP_THRESHOLD && !isFeatured(meme)) {
-            featuredTokens.addMeme(meme);
-        } else if (featuredTokens.length() < FEATURED_MEMES_CAPS) {
-            featuredTokens.addMeme(meme);
+        bool alreadyFeatured = isFeatured(meme);
+
+        if (!alreadyFeatured) {
+            if (meme.totalSupply() > FEATURED_MARKET_CAP_THRESHOLD || featuredTokens.length() < FEATURED_MEMES_CAPS) {
+                featuredTokens.addMeme(meme);
+            }
         }
     }
 
@@ -87,5 +89,21 @@ contract LaunchPad {
 
     function getAuction(address token) external view returns (address) {
         return tokenToAuction[token];
+    }
+
+    function getFeaturedTokens() external view returns (MemeCoin[] memory) {
+        return featuredTokens.getAllMemes();
+    }
+
+    function getRecentTokens() external view returns (MemeCoin[] memory) {
+        return recentTokens.getAllMemes();
+    }
+
+    function getFeaturedTokenAddresses() external view returns (address[] memory) {
+        return featuredTokens.getAllMemeAddresses();
+    }
+
+    function getRecentTokenAddresses() external view returns (address[] memory) {
+        return recentTokens.getAllMemeAddresses();
     }
 }
