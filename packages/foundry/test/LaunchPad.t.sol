@@ -36,7 +36,6 @@ contract LaunchPadTest is Test {
     }
 
     function testLaunchTwiceSameMeme() public {
-        // Should have 2 Meme Coin Launched
         string memory name = "TestToken";
         string memory symbol = "TTK";
         string memory description = "Test Desc";
@@ -74,8 +73,22 @@ contract LaunchPadTest is Test {
         vm.deal(user, 10 ether);
         vm.startPrank(user);
 
-        uint256 amountToMint = 1; // Buy 1 token
+        uint256 amountToMint = 1;
         uint256 price = bca.curve().getMintCost(0, amountToMint);
         launchPad.buy{ value: price }(memeToken, amountToMint);
+    }
+
+    function testFirstMemeIsFeatured() public {
+        string memory name = "First";
+        string memory symbol = "FST";
+        string memory description = "Initial meme";
+        string memory image = "image.png";
+
+        MemeCoin token = launchPad.launchNewMeme(name, symbol, description, image);
+
+        address[] memory featured = launchPad.getFeaturedTokenAddresses();
+        assertEq(featured.length, 1, "First meme should be featured");
+
+        assertEq(featured[0], address(token), "Featured token should be the launched token");
     }
 }

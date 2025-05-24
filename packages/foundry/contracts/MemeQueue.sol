@@ -43,6 +43,14 @@ contract MemeQueue {
         return queue;
     }
 
+    function getAllMemeAddresses() external view returns (address[] memory) {
+        address[] memory result = new address[](queue.length);
+        for (uint256 i = 0; i < queue.length; i++) {
+            result[i] = address(queue[i]);
+        }
+        return result;
+    }
+
     function contains(MemeCoin meme) public view returns (bool) {
         for (uint256 i = 0; i < queue.length; i++) {
             if (address(meme) == address(queue[i])) {
