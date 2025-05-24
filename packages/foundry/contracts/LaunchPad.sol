@@ -12,7 +12,7 @@ contract LaunchPad {
     address public owner;
     uint256 public constant MAX_CAP = 10 ether;
     uint256 private constant RECENT_MEMES_CAPS = 50;
-    uint256 private constant FEATURED_MEMES_CAPS = 8;
+    uint256 private constant FEATURED_MEMES_CAPS = 2;
     uint256 private constant FEATURED_MARKET_CAP_THRESHOLD = 5 ether;
 
     mapping(address => address) public tokenToAuction;

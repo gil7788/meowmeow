@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     MemeCoinFactory: {
-      address: "0xf7cd8fa9b94db2aa972023b379c7f72c65e4de9d",
+      address: "0x0c8e79f3534b00d9a3d4a856b665bf4ebc22f2ba",
       abi: [
         {
           type: "function",
@@ -135,11 +135,11 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1749727319.json",
+      deploymentFile: "run-1748127452.json",
       deploymentScript: "Deploy.s.sol",
     },
     LaunchPad: {
-      address: "0x12975173b87f7595ee45dffb2ab812ece596bf84",
+      address: "0xed1db453c3156ff3155a97ad217b3087d5dc5f6e",
       abi: [
         {
           type: "constructor",
@@ -528,7 +528,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1749727319.json",
+      deploymentFile: "run-1748127452.json",
       deploymentScript: "Deploy.s.sol",
     },
   },
