@@ -25,14 +25,20 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
     const feeDenominator = 100n;
     let rawPrice = 0n;
     let price = 0n;
+    let a = 0n;
+    let b = 0n;
 
     if (isBuying) {
-      for (let i = totalSupply + 1n; i <= totalSupply + amount; i++) rawPrice += i * i;
-      price = (rawPrice * feeNumerator) / feeDenominator + 1n;
+      a = totalSupply + 1n;
+      b = totalSupply + amount;
     } else {
-      for (let i = totalSupply; i > totalSupply - amount; i--) rawPrice += i * i;
-      price = (rawPrice * feeNumerator) / feeDenominator - 1n;
+      a = totalSupply + amount + 1n;
+      b = totalSupply;
     }
+    const sumAfter = (b * (b + 1n) * (2n * b + 1n)) / 6n;
+    const sumBefore = ((a - 1n) * a * (2n * (a - 1n) + 1n)) / 6n;
+    rawPrice = sumAfter - sumBefore;
+    price = (rawPrice * feeNumerator) / feeDenominator + 1n;
     return price;
   }
 
