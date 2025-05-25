@@ -21,6 +21,14 @@ export default function LaunchPage() {
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
+  const [xProfile, setXProfile] = useState("");
+  const [telegram, setTelegram] = useState("");
+  const [youtubeLink, setYoutubeLink] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [tiktok, setTiktok] = useState("");
+  const [webpage, setWebpage] = useState("");
+  const [expanded, setExpended] = useState(false);
+
   const router = useRouter();
   const { writeContractAsync, isPending } = useScaffoldWriteContract("LaunchPad");
   const publicClient = usePublicClient();
@@ -170,6 +178,73 @@ export default function LaunchPage() {
                   <p className="text-xs text-muted-foreground">
                     Upload a square image (recommended: 512x512px, max 2MB)
                   </p>
+                </div>
+                {/* TODO finalize the toggle button */}
+                <Button className="w-full">
+                  {expanded ? "Less Details" : "More Details"}
+                </Button>
+                <div>
+                  <CardHeader><b> Additional Information </b></CardHeader>
+                  <div className="space-y-2">
+                    <Label htmlFor="symbol">X Account</Label>
+                    <Input
+                      id="symbol"
+                      placeholder="e.g. Elon Musk"
+                      required
+                      value={symbol}
+                      onChange={e => setXProfile(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="symbol">Telegram</Label>
+                    <Input
+                      id="symbol"
+                      placeholder="e.g. Pavel Durov"
+                      required
+                      value={symbol}
+                      onChange={e => setTelegram(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="symbol">Youtube Link</Label>
+                    <Input
+                      id="symbol"
+                      placeholder="e.g. ???"
+                      required
+                      value={symbol}
+                      onChange={e => setYoutubeLink(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="symbol">Instagram Profile</Label>
+                    <Input
+                      id="symbol"
+                      placeholder="e.g. ???"
+                      required
+                      value={symbol}
+                      onChange={e => setInstagram(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="symbol">TikTok</Label>
+                    <Input
+                      id="symbol"
+                      placeholder="e.g. ???"
+                      required
+                      value={symbol}
+                      onChange={e => setTiktok(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="symbol">Webpage</Label>
+                    <Input
+                      id="symbol"
+                      placeholder="e.g. Larry Page"
+                      required
+                      value={symbol}
+                      onChange={e => setWebpage(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isPending}>
                   {isPending ? "Submitting..." : "Submit Meme Coin"}
