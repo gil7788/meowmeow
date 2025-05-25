@@ -6,6 +6,7 @@ import { ERC20Permit } from "openzeppelin-contracts/contracts/token/ERC20/extens
 import { Ownable } from "openzeppelin-contracts/contracts/access/Ownable.sol";
 
 contract MemeCoin is ERC20, Ownable {
+    // Consider to delete as there a duplication (also save as token metadata in factory)
     uint256 public maxCap;
 
     constructor(uint256 _maxCap, string memory name, string memory symbol) ERC20(name, symbol) Ownable(msg.sender) {
