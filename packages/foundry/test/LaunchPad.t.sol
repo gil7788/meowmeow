@@ -6,7 +6,6 @@ import "../contracts/LaunchPad.sol";
 import "../contracts/MemeCoinFactory.sol";
 import "../contracts/MemeCoin.sol";
 import "../contracts/BondingCurveAuction.sol";
-import "forge-std/console.sol";
 
 contract LaunchPadTest is Test {
     LaunchPad public launchPad;
@@ -19,55 +18,33 @@ contract LaunchPadTest is Test {
         launchPad = new LaunchPad(address(factory));
     }
 
-    function testLaunchMeme() public {
-        string memory name = "TestToken";
-        string memory symbol = "TTK";
-        string memory description = "Test Desc";
-        string memory image = "img.png";
+    function launchBasic(string memory name, string memory symbol, string memory description, string memory image)
+        internal
+        returns (MemeCoin)
+    {
+        return launchPad.launchNewMeme(name, symbol, description, "", "", "", "", "", "", image);
+    }
 
-        MemeCoin token = launchPad.launchNewMeme(name, symbol, description, image);
+    function testLaunchMeme() public {
+        MemeCoin token = launchBasic("TestToken", "TTK", "Test Desc", "img.png");
         assertEq(launchPad.recentTokens().length(), 1);
 
         address memeToken = address(token);
         address auction = launchPad.getAuction(memeToken);
-        assertTrue(auction != address(0), "Auction should be deployed");
-
+        assertTrue(auction != address(0));
         assertEq(token.owner(), auction);
     }
 
     function testLaunchTwiceSameMeme() public {
-        string memory name = "TestToken";
-        string memory symbol = "TTK";
-        string memory description = "Test Desc";
-        string memory image = "img.png";
-
-        MemeCoin token0 = launchPad.launchNewMeme(name, symbol, description, image);
-        launchPad.launchNewMeme(name, symbol, description, image);
+        launchBasic("TestToken", "TTK", "Test Desc", "img.png");
+        launchBasic("TestToken", "TTK", "Test Desc", "img.png");
         assertEq(launchPad.recentTokens().length(), 2);
-
-        address memeToken = address(token0);
-        address auction = launchPad.getAuction(memeToken);
-        assertTrue(auction != address(0), "Auction should be deployed");
-
-        MemeCoin token = MemeCoin(memeToken);
-        assertEq(token.owner(), auction);
     }
 
     function testLaunchBuy() public {
-        string memory name = "TestToken";
-        string memory symbol = "TTK";
-        string memory description = "Test Desc";
-        string memory image = "img.png";
-
-        MemeCoin token0 = launchPad.launchNewMeme(name, symbol, description, image);
-        assertEq(launchPad.recentTokens().length(), 1);
-
+        MemeCoin token0 = launchBasic("TestToken", "TTK", "Test Desc", "img.png");
         address memeToken = address(token0);
         address auction = launchPad.getAuction(memeToken);
-        assertTrue(auction != address(0), "Auction should be deployed");
-
-        MemeCoin token = MemeCoin(memeToken);
-        assertEq(token.owner(), auction);
 
         BondingCurveAuction bca = BondingCurveAuction(payable(auction));
         vm.deal(user, 10 ether);
@@ -76,47 +53,33 @@ contract LaunchPadTest is Test {
         uint256 amountToMint = 1;
         uint256 price = bca.curve().getMintCost(0, amountToMint);
         launchPad.buy{ value: price }(memeToken, amountToMint);
+        vm.stopPrank();
     }
 
     function testFirstMemeIsFeatured() public {
-        string memory name = "First";
-        string memory symbol = "FST";
-        string memory description = "Initial meme";
-        string memory image = "image.png";
-
-        MemeCoin token = launchPad.launchNewMeme(name, symbol, description, image);
-
+        MemeCoin token = launchBasic("First", "FST", "Initial meme", "image.png");
         address[] memory featured = launchPad.getFeaturedTokenAddresses();
-        assertEq(featured.length, 1, "First meme should be featured");
-
-        assertEq(featured[0], address(token), "Featured token should be the launched token");
+        assertEq(featured.length, 1);
+        assertEq(featured[0], address(token));
     }
 
-    // [TODO]: Consider to pass max featured coins as an parameter to launchpad
     function testFeaturedCapUnderThresholdGetsAdded() public {
-        // Fill featured queue to 7 (under cap)
         for (uint256 i = 0; i < 7; i++) {
-            string memory name = string.concat("Token", vm.toString(i));
-            launchPad.launchNewMeme(name, "SYM", "desc", "img.png");
+            launchBasic(string.concat("Token", vm.toString(i)), "SYM", "desc", "img.png");
         }
 
-        // Launch 8th token with 0 supply (won't pass market cap threshold)
-        MemeCoin lowCap = launchPad.launchNewMeme("LowCap", "LC", "desc", "img.png");
-
+        MemeCoin lowCap = launchBasic("LowCap", "LC", "desc", "img.png");
         address[] memory featured = launchPad.getFeaturedTokenAddresses();
         assertEq(featured.length, 8);
         assertEq(featured[7], address(lowCap));
     }
 
     function testFeaturedCapReachedLowSupplyGetsIgnored() public {
-        // Fill up to 8 featured tokens
         for (uint256 i = 0; i < 8; i++) {
-            string memory name = string.concat("Token", vm.toString(i));
-            launchPad.launchNewMeme(name, "SYM", "desc", "img.png");
+            launchBasic(string.concat("Token", vm.toString(i)), "SYM", "desc", "img.png");
         }
 
-        // Attempt to add a 9th with low supply (not above threshold)
-        MemeCoin extra = launchPad.launchNewMeme("Extra", "EXT", "desc", "img.png");
+        MemeCoin extra = launchBasic("Extra", "EXT", "desc", "img.png");
         address[] memory featured = launchPad.getFeaturedTokenAddresses();
         assertEq(featured.length, 8);
         for (uint256 i = 0; i < 8; i++) {
@@ -126,11 +89,10 @@ contract LaunchPadTest is Test {
 
     function testFeaturedCapReachedHighSupplyGetsAdded() public {
         for (uint256 i = 0; i < 8; i++) {
-            string memory name = string.concat("Token", vm.toString(i));
-            launchPad.launchNewMeme(name, "SYM", "desc", "img.png");
+            launchBasic(string.concat("Token", vm.toString(i)), "SYM", "desc", "img.png");
         }
 
-        MemeCoin highCap = launchPad.launchNewMeme("High", "HGH", "desc", "img.png");
+        MemeCoin highCap = launchBasic("High", "HGH", "desc", "img.png");
         BondingCurveAuction auction = BondingCurveAuction(payable(launchPad.getAuction(address(highCap))));
         vm.deal(user, 10 ether);
         vm.startPrank(user);
@@ -140,12 +102,12 @@ contract LaunchPadTest is Test {
         vm.stopPrank();
 
         address[] memory featured = launchPad.getFeaturedTokenAddresses();
-        assertEq(featured.length, 8); // Surpasses threshold despite queue cap
+        assertEq(featured.length, 8);
         assertEq(featured[7], address(highCap));
     }
 
     function testAlreadyFeaturedTokenIsNotReadded() public {
-        MemeCoin token = launchPad.launchNewMeme("Dup", "DUP", "desc", "img.png");
+        MemeCoin token = launchBasic("Dup", "DUP", "desc", "img.png");
         BondingCurveAuction auction = BondingCurveAuction(payable(launchPad.getAuction(address(token))));
         vm.deal(user, 10 ether);
         vm.startPrank(user);
@@ -155,23 +117,111 @@ contract LaunchPadTest is Test {
         vm.stopPrank();
 
         address[] memory featuredBefore = launchPad.getFeaturedTokenAddresses();
-        uint256 amountToBuy2 = 1;
-        launchPad.buy{ value: cost }(address(token), amountToBuy2);
+        launchPad.buy{ value: cost }(address(token), 1);
         address[] memory featuredAfter = launchPad.getFeaturedTokenAddresses();
+
         assertEq(featuredBefore.length, featuredAfter.length);
         assertEq(featuredBefore[0], featuredAfter[0]);
     }
 
     function testEdgeCaseExactly8LowCapTokenIgnored() public {
         for (uint256 i = 0; i < 8; i++) {
-            string memory name = string.concat("Token", vm.toString(i));
-            launchPad.launchNewMeme(name, "SYM", "desc", "img.png");
+            launchBasic(string.concat("Token", vm.toString(i)), "SYM", "desc", "img.png");
         }
-        MemeCoin ignored = launchPad.launchNewMeme("Ignored", "IGN", "desc", "img.png");
+        MemeCoin ignored = launchBasic("Ignored", "IGN", "desc", "img.png");
         address[] memory featured = launchPad.getFeaturedTokenAddresses();
         assertEq(featured.length, 8);
         for (uint256 i = 0; i < 8; i++) {
             assertTrue(featured[i] != address(ignored));
         }
+    }
+
+    function testLaunchWithOptionalMetadata() public {
+        MemeCoin token = launchPad.launchNewMeme(
+            "FullToken",
+            "FTK",
+            "A token with everything",
+            "https://x.com/fulltoken",
+            "https://t.me/fulltoken",
+            "https://youtube.com/fulltoken",
+            "https://instagram.com/fulltoken",
+            "https://tiktok.com/@fulltoken",
+            "https://fulltoken.io",
+            "full-image.png"
+        );
+
+        address tokenAddress = address(token);
+        MemeCoinFactory.TokenMetadata memory meta = factory.getTokenMetadata(tokenAddress);
+
+        assertEq(meta.name, "FullToken");
+        assertEq(meta.telegram, "https://t.me/fulltoken");
+        assertEq(meta.webpage, "https://fulltoken.io");
+        assertEq(meta.image, "full-image.png");
+    }
+
+    function testLaunchWithAllMetadataSet1() public {
+        MemeCoin token = launchPad.launchNewMeme(
+            "MemeX",
+            "MX",
+            "Cool Meme Token",
+            "https://x.com/memex",
+            "https://t.me/memex",
+            "https://youtube.com/memex",
+            "https://instagram.com/memex",
+            "https://tiktok.com/@memex",
+            "https://memex.io",
+            "memex.png"
+        );
+
+        address tokenAddress = address(token);
+        MemeCoinFactory.TokenMetadata memory meta = factory.getTokenMetadata(tokenAddress);
+
+        assertEq(meta.name, "MemeX");
+        assertEq(meta.symbol, "MX");
+        assertEq(meta.description, "Cool Meme Token");
+        assertEq(meta.xProfile, "https://x.com/memex");
+        assertEq(meta.telegram, "https://t.me/memex");
+        assertEq(meta.youtubeLink, "https://youtube.com/memex");
+        assertEq(meta.instagram, "https://instagram.com/memex");
+        assertEq(meta.tiktok, "https://tiktok.com/@memex");
+        assertEq(meta.webpage, "https://memex.io");
+        assertEq(meta.image, "memex.png");
+
+        address auction = launchPad.getAuction(tokenAddress);
+        assertTrue(auction != address(0));
+        assertEq(token.owner(), auction);
+    }
+
+    function testLaunchWithAllMetadataSet2() public {
+        MemeCoin token = launchPad.launchNewMeme(
+            "MegaMeme",
+            "MME",
+            "Meme but Mega",
+            "https://x.com/megameme",
+            "https://t.me/megameme",
+            "https://youtube.com/megameme",
+            "https://instagram.com/megameme",
+            "https://tiktok.com/@megameme",
+            "https://megameme.fun",
+            "megameme.png"
+        );
+
+        address tokenAddress = address(token);
+        MemeCoinFactory.TokenMetadata memory meta = factory.getTokenMetadata(tokenAddress);
+
+        assertEq(meta.name, "MegaMeme");
+        assertEq(meta.symbol, "MME");
+        assertEq(meta.description, "Meme but Mega");
+        assertEq(meta.xProfile, "https://x.com/megameme");
+        assertEq(meta.telegram, "https://t.me/megameme");
+        assertEq(meta.youtubeLink, "https://youtube.com/megameme");
+        assertEq(meta.instagram, "https://instagram.com/megameme");
+        assertEq(meta.tiktok, "https://tiktok.com/@megameme");
+        assertEq(meta.webpage, "https://megameme.fun");
+        assertEq(meta.image, "megameme.png");
+
+        address auction = launchPad.getAuction(tokenAddress);
+        assertTrue(auction != address(0));
+        assertEq(token.owner(), auction);
     }
 }

@@ -12,7 +12,7 @@ contract LaunchPad {
     address public owner;
     uint256 public constant MAX_CAP = 10 ether;
     uint256 private constant RECENT_MEMES_CAPS = 50;
-    uint256 private constant FEATURED_MEMES_CAPS = 2;
+    uint256 private constant FEATURED_MEMES_CAPS = 8;
     uint256 private constant FEATURED_MARKET_CAP_THRESHOLD = 5 ether;
 
     mapping(address => address) public tokenToAuction;
@@ -37,11 +37,22 @@ contract LaunchPad {
         featuredTokens = new MemeQueue(FEATURED_MEMES_CAPS);
     }
 
-    function launchNewMeme(string memory name, string memory symbol, string memory description, string memory image)
-        external
-        returns (MemeCoin)
-    {
-        MemeCoin meme = memeFactory.mintNewToken(MAX_CAP, name, symbol, description, image);
+    function launchNewMeme(
+        string memory name,
+        string memory symbol,
+        string memory description,
+        string memory xProfile,
+        string memory telegram,
+        string memory youtubeLink,
+        string memory instagram,
+        string memory tiktok,
+        string memory webpage,
+        string memory image
+    ) external returns (MemeCoin) {
+        MemeCoin meme = memeFactory.mintNewToken(
+            MAX_CAP, name, symbol, description, xProfile, telegram, youtubeLink, instagram, tiktok, webpage, image
+        );
+
         address memeAddress = address(meme);
         BondingCurveAuction auction = new BondingCurveAuction(meme, address(this));
         tokenToAuction[memeAddress] = address(auction);
@@ -50,6 +61,7 @@ contract LaunchPad {
         meme.transferOwnership(address(auction));
 
         updateFeatured(meme, auction);
+
         emit TokenCreated(msg.sender, memeAddress, name, symbol, description, image);
         return meme;
     }
