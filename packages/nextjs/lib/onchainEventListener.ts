@@ -115,6 +115,7 @@ export function listenToBuyEvent(
     price: ethers.BigNumberish,
     tokenTotalSupply: ethers.BigNumberish,
     event: any,
+    memeAddress: string,
   ) => void,
 ): () => void {
   const provider = getHttpProvider();
@@ -126,8 +127,9 @@ export function listenToBuyEvent(
     price: ethers.BigNumberish,
     tokenTotalSupply: ethers.BigNumberish,
     event: any,
+    memeAddress: string,
   ) => {
-    onEvent(buyer, amount, price, tokenTotalSupply, event);
+    onEvent(buyer, amount, price, tokenTotalSupply, event, memeAddress);
   };
 
   contract.on("Buy", handler);

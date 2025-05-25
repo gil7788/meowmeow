@@ -12,14 +12,39 @@ import { listenToBuyEvent, listenToSellEvent } from "~~/lib/onchainEventListener
 
 export default function TokenSaleCard({ project, hash }: { project: ProjectData; hash: string }) {
   const { raisedEth, ethMaxCap, progress, loading, error, refresh } = useTokenEthBalance(hash);
-  const { totalSupply, userBalance, symbol } = useTokenBalance(hash);
+  const { totalSupply, userBalance, symbol, refresh: tokenStats } = useTokenBalance(hash);
 
+  // useEffect(() => {
+  //   const offBuy = listenToBuyEvent((_, __, ___, ____, memeAddress) => {
+  //     console.log(`event?.address?.toLowerCase() === hash.toLowerCase()1: ${memeAddress.toLowerCase() === hash.toLowerCase()}`);
+  //     console.log(`event?.address?.toLowerCase(): ${memeAddress.toLowerCase()}`);
+  //     console.log(`hash.toLowerCase(): ${hash.toLowerCase()}`);
+  //     // console.log(`event: ${JSON.stringify(event)}`);
+  //     // if(memeAddress.toLowerCase() == hash.toLowerCase()) {
+  //       refresh();
+  //       tokenStats();
+  //     // }
+  //   });
+
+  // TODO pass the meme coin address each time a new token is bought
   useEffect(() => {
-    const offBuy = listenToBuyEvent((_, __, ___, ____, event) => {
-      if (event?.address?.toLowerCase() === hash.toLowerCase()) {
+    function offBuy(memeAddress: string) {
+      listenToBuyEvent((_, __, ___, ____, event, memeAddress) => {
+        console.log(`hash.toLowerCase(): ${hash.toLowerCase()}`);
+        console.log(`memeAddress: ${memeAddress}`);
         refresh();
-      }
-    });
+        tokenStats();
+      });
+    }
+    // const offBuy(memeAddress) = listenToBuyEvent((_, __, ___, ____, event, memeAddress) => {
+    //   console.log(`event?.address?.toLowerCase() === hash.toLowerCase()1: ${event?.address?.toLowerCase() === hash.toLowerCase()}`);
+    //   console.log(`event?.address?.toLowerCase(): ${event?.address?.toLowerCase()}`);
+    //   // console.log(`event: ${JSON.stringify(event)}`);
+    //   console.log(`hash.toLowerCase(): ${hash.toLowerCase()}`);
+    //   console.log(`memeAddress: ${memeAddress}`);
+    //   refresh();
+    //   tokenStats();
+    // });
 
     const offSell = listenToSellEvent(({ token }) => {
       if (token.toLowerCase() === hash.toLowerCase()) {
@@ -28,8 +53,9 @@ export default function TokenSaleCard({ project, hash }: { project: ProjectData;
     });
 
     return () => {
-      offBuy();
+      offBuy(hash);
       offSell();
+      console.log("Buy and Sell");
     };
   }, [hash, refresh]);
 
