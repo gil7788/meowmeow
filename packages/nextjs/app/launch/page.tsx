@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { parseTokenCreatedLog } from "@/lib/onchainEventParser";
 import { ethers } from "ethers";
 import { ArrowLeft, Cat } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { usePublicClient } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { TokenCreatedEvent } from "~~/lib/types";
@@ -132,7 +133,7 @@ export default function LaunchPage() {
                     <Label htmlFor="name">Coin Name</Label>
                     <Input
                       id="name"
-                      placeholder="e.g. MeowZircuit"
+                      placeholder="MeowZircuit"
                       required
                       value={name}
                       onChange={e => setName(e.target.value)}
@@ -142,7 +143,7 @@ export default function LaunchPage() {
                     <Label htmlFor="symbol">Token Symbol</Label>
                     <Input
                       id="symbol"
-                      placeholder="e.g. MEOW"
+                      placeholder="MEOW"
                       required
                       value={symbol}
                       onChange={e => setSymbol(e.target.value)}
@@ -179,73 +180,93 @@ export default function LaunchPage() {
                     Upload a square image (recommended: 512x512px, max 2MB)
                   </p>
                 </div>
-                {/* TODO finalize the toggle button */}
-                <Button className="w-full">
+
+                {/* <Button type="button" className="w-full" onClick={() => setExpended(prev => !prev)}>
                   {expanded ? "Less Details" : "More Details"}
-                </Button>
-                <div>
-                  <CardHeader><b> Additional Information </b></CardHeader>
-                  <div className="space-y-2">
-                    <Label htmlFor="symbol">X Account</Label>
-                    <Input
-                      id="symbol"
-                      placeholder="e.g. Elon Musk"
-                      required
-                      value={symbol}
-                      onChange={e => setXProfile(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="symbol">Telegram</Label>
-                    <Input
-                      id="symbol"
-                      placeholder="e.g. Pavel Durov"
-                      required
-                      value={symbol}
-                      onChange={e => setTelegram(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="symbol">Youtube Link</Label>
-                    <Input
-                      id="symbol"
-                      placeholder="e.g. ???"
-                      required
-                      value={symbol}
-                      onChange={e => setYoutubeLink(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="symbol">Instagram Profile</Label>
-                    <Input
-                      id="symbol"
-                      placeholder="e.g. ???"
-                      required
-                      value={symbol}
-                      onChange={e => setInstagram(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="symbol">TikTok</Label>
-                    <Input
-                      id="symbol"
-                      placeholder="e.g. ???"
-                      required
-                      value={symbol}
-                      onChange={e => setTiktok(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="symbol">Webpage</Label>
-                    <Input
-                      id="symbol"
-                      placeholder="e.g. Larry Page"
-                      required
-                      value={symbol}
-                      onChange={e => setWebpage(e.target.value)}
-                    />
-                  </div>
+                </Button> */}
+
+                <div className="flex justify-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setExpended(prev => !prev)}
+                    className="flex items-center gap-1 text-sm"
+                  >
+                    {expanded ? (
+                      <>
+                        Less Details <ChevronUp className="w-4 h-4" />
+                      </>
+                    ) : (
+                      <>
+                        More Details <ChevronDown className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
                 </div>
+
+                {expanded && (
+                  <div>
+                    <CardHeader>
+                      <b>Additional Information</b>
+                    </CardHeader>
+                    <div className="space-y-2">
+                      <Label htmlFor="x">X Account</Label>
+                      <Input
+                        id="x"
+                        placeholder="https://x.com/memecoin"
+                        value={xProfile}
+                        onChange={e => setXProfile(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="telegram">Telegram</Label>
+                      <Input
+                        id="telegram"
+                        placeholder="https://t.me/memecoin"
+                        value={telegram}
+                        onChange={e => setTelegram(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="youtube">YouTube Link</Label>
+                      <Input
+                        id="youtube"
+                        placeholder="https://www.youtube.com/watch?v=vabXXkZjKiw"
+                        value={youtubeLink}
+                        onChange={e => setYoutubeLink(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="instagram">Instagram Profile</Label>
+                      <Input
+                        id="instagram"
+                        placeholder="@yourprofile"
+                        value={instagram}
+                        onChange={e => setInstagram(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tiktok">TikTok</Label>
+                      <Input
+                        id="tiktok"
+                        placeholder="@yourtiktok"
+                        value={tiktok}
+                        onChange={e => setTiktok(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="webpage">Webpage</Label>
+                      <Input
+                        id="webpage"
+                        placeholder="yoursite.com"
+                        value={webpage}
+                        onChange={e => setWebpage(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <Button type="submit" className="w-full" disabled={isPending}>
                   {isPending ? "Submitting..." : "Submit Meme Coin"}
                 </Button>

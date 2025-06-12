@@ -7,11 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     MemeCoinFactory: {
-<<<<<<< HEAD
-      address: "0xe1aa25618fa0c7a1cfdab5d6b456af611873b629",
-=======
       address: "0x0c8e79f3534b00d9a3d4a856b665bf4ebc22f2ba",
->>>>>>> 444bbab (Fix Featured Tokens Update Logic)
       abi: [
         {
           type: "function",
@@ -139,19 +135,11 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-<<<<<<< HEAD
-      deploymentFile: "run-1749726674.json",
-      deploymentScript: "Deploy.s.sol",
-    },
-    LaunchPad: {
-      address: "0xe1da8919f262ee86f9be05059c9280142cf23f48",
-=======
-      deploymentFile: "run-1748127452.json",
+      deploymentFile: "run-1749726773.json",
       deploymentScript: "Deploy.s.sol",
     },
     LaunchPad: {
       address: "0xed1db453c3156ff3155a97ad217b3087d5dc5f6e",
->>>>>>> 444bbab (Fix Featured Tokens Update Logic)
       abi: [
         {
           type: "constructor",
@@ -540,11 +528,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-<<<<<<< HEAD
-      deploymentFile: "run-1749726674.json",
-=======
-      deploymentFile: "run-1748127452.json",
->>>>>>> 444bbab (Fix Featured Tokens Update Logic)
+      deploymentFile: "run-1749726773.json",
       deploymentScript: "Deploy.s.sol",
     },
   },
