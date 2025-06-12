@@ -21,10 +21,9 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
   function getPriceOracle(amount: bigint, totalSupply: bigint, isBuying: boolean): bigint {
     if (!isBuying && totalSupply < amount) return 0n;
 
-    const feeNumerator = 103n;
+    const buyFeeNumerator = 103n;
+    const sellFeeNumerator = 97n;
     const feeDenominator = 100n;
-    let rawPrice = 0n;
-    let price = 0n;
     let a = 0n;
     let b = 0n;
 
@@ -32,14 +31,18 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
       a = totalSupply + 1n;
       b = totalSupply + amount;
     } else {
-      a = totalSupply + amount + 1n;
+      a = totalSupply - amount + 1n;
       b = totalSupply;
     }
+
     const sumAfter = (b * (b + 1n) * (2n * b + 1n)) / 6n;
     const sumBefore = ((a - 1n) * a * (2n * (a - 1n) + 1n)) / 6n;
-    rawPrice = sumAfter - sumBefore;
-    price = (rawPrice * feeNumerator) / feeDenominator + 1n;
-    return price;
+    const rawPrice = sumAfter - sumBefore;
+    if (isBuying) {
+      return (rawPrice * buyFeeNumerator) / feeDenominator + 1n;
+    } else {
+      return (rawPrice * sellFeeNumerator) / feeDenominator + 1n;
+    }
   }
 
   useEffect(() => {
@@ -63,14 +66,12 @@ export function EstimatedCost({ amount, isBuying, totalSupply, setPriceOracleWit
       const formatted = new FormattedEthUnits(rawPrice);
       setLocalOracle(formatted);
       setPriceOracleWithUnit(formatted);
-      const unitFormatted = localOracle.valueInAllUnits[selectedUnit];
-      setDisplayPrice(unitFormatted);
     } catch {
       const fallback = new FormattedEthUnits();
       setLocalOracle(fallback);
       setPriceOracleWithUnit(fallback);
     }
-  }, [amount, isBuying, totalSupply, selectedUnit, setPriceOracleWithUnit]);
+  }, [amount, isBuying, totalSupply, setPriceOracleWithUnit]);
 
   useEffect(() => {
     if (!selectedUnit || !localOracle?.valueInAllUnits?.[selectedUnit]) return;

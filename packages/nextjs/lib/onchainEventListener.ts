@@ -134,7 +134,15 @@ export function listenToBuyEvent(
   return () => contract.off("Buy", handler);
 }
 
-export function listenToSellEvent(onEvent: (event: { token: string }) => void): () => void {
+export function listenToSellEvent(
+  onEvent: (payload: {
+    seller: string;
+    amount: ethers.BigNumberish;
+    token: string;
+    tokenTotalSupply: ethers.BigNumberish;
+    event: any;
+  }) => void,
+): () => void {
   const provider = getHttpProvider();
   const contract = new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, provider);
 
@@ -147,7 +155,12 @@ export function listenToSellEvent(onEvent: (event: { token: string }) => void): 
   ) => {
     try {
       const token = event?.address;
-      onEvent({ token });
+      if (!token || !ethers.isAddress(token)) {
+        console.warn("Sell event missing valid token address:", event);
+        return;
+      }
+
+      onEvent({ seller, amount, token, tokenTotalSupply, event });
     } catch (e) {
       console.error("Failed to parse Sell event:", e);
     }
