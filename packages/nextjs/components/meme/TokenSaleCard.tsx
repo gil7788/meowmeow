@@ -1,64 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import AuctionAbi from "@/abi/BondingCurveAuction.json";
-import MemeCoinAbi from "@/abi/MemeCoin.json";
+import { useEffect } from "react";
 import { TokenBalance } from "@/components/meme/TokenBalance";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useTokenBalance } from "@/hooks/useTokenBalance";
+import { useTokenEthBalance } from "@/hooks/useTokenEthBalance";
 import { ProjectData } from "@/lib/types";
-import { formatEther } from "viem";
-import { usePublicClient } from "wagmi";
-import { publicFetch } from "~~/lib/onchainEventListener";
-
-function useTokenEthBalance(tokenAddress: string) {
-  const publicClient = usePublicClient();
-  const [raisedEth, setRaisedEth] = useState<number>(0);
-  const [ethMaxCap, setMaxCap] = useState<number>(1);
-  const [progress, setProgress] = useState<number>(0);
-
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (!publicClient || !tokenAddress) return;
-
-      try {
-        const auctionAddress = await publicFetch(publicClient, tokenAddress, "owner", MemeCoinAbi, []);
-        if (auctionAddress) {
-          const balance = await publicClient.getBalance({
-            address: auctionAddress as `0x${string}`,
-          });
-          const maxCap = await publicFetch(publicClient, tokenAddress, "maxCap", AuctionAbi, []);
-
-          if (balance !== undefined) {
-            setRaisedEth(Number(formatEther(balance)));
-          }
-
-          if (maxCap !== undefined) {
-            setMaxCap(Number(formatEther(maxCap)));
-          }
-        }
-      } catch (e) {
-        console.error("Failed to fetch token balance", e);
-      }
-    };
-
-    fetchBalance();
-  }, [publicClient, tokenAddress]);
-
-  useEffect(() => {
-    if (ethMaxCap !== 0) {
-      setProgress((raisedEth / ethMaxCap) * 100);
-    }
-  }, [raisedEth, ethMaxCap]);
-
-  return { raisedEth, ethMaxCap, progress };
-}
+import { listenToBuyEvent, listenToSellEvent } from "~~/lib/onchainEventListener";
 
 export default function TokenSaleCard({ project, hash }: { project: ProjectData; hash: string }) {
-  const { raisedEth, ethMaxCap, progress } = useTokenEthBalance(hash);
-  const { totalSupply, userBalance, symbol } = useTokenBalance(hash); // hash is the token address
+  const { raisedEth, ethMaxCap, progress, loading, error, refresh } = useTokenEthBalance(hash);
+  const { totalSupply, userBalance, symbol, refresh: tokenStats } = useTokenBalance(hash);
+
+  // useEffect(() => {
+  //   const offBuy = listenToBuyEvent((_, __, ___, ____, memeAddress) => {
+  //     console.log(`event?.address?.toLowerCase() === hash.toLowerCase()1: ${memeAddress.toLowerCase() === hash.toLowerCase()}`);
+  //     console.log(`event?.address?.toLowerCase(): ${memeAddress.toLowerCase()}`);
+  //     console.log(`hash.toLowerCase(): ${hash.toLowerCase()}`);
+  //     // console.log(`event: ${JSON.stringify(event)}`);
+  //     // if(memeAddress.toLowerCase() == hash.toLowerCase()) {
+  //       refresh();
+  //       tokenStats();
+  //     // }
+  //   });
+
+  // TODO pass the meme coin address each time a new token is bought
+  useEffect(() => {
+    function offBuy(memeAddress: string) {
+      listenToBuyEvent((_, __, ___, ____, event, memeAddress) => {
+        console.log(`hash.toLowerCase(): ${hash.toLowerCase()}`);
+        console.log(`memeAddress: ${memeAddress}`);
+        refresh();
+        tokenStats();
+      });
+    }
+    // const offBuy(memeAddress) = listenToBuyEvent((_, __, ___, ____, event, memeAddress) => {
+    //   console.log(`event?.address?.toLowerCase() === hash.toLowerCase()1: ${event?.address?.toLowerCase() === hash.toLowerCase()}`);
+    //   console.log(`event?.address?.toLowerCase(): ${event?.address?.toLowerCase()}`);
+    //   // console.log(`event: ${JSON.stringify(event)}`);
+    //   console.log(`hash.toLowerCase(): ${hash.toLowerCase()}`);
+    //   console.log(`memeAddress: ${memeAddress}`);
+    //   refresh();
+    //   tokenStats();
+    // });
+
+    const offSell = listenToSellEvent(({ token }) => {
+      if (token.toLowerCase() === hash.toLowerCase()) {
+        refresh();
+      }
+    });
+
+    return () => {
+      offBuy(hash);
+      offSell();
+      console.log("Buy and Sell");
+    };
+  }, [hash, refresh]);
 
   return (
     <div className="space-y-6">
@@ -74,18 +73,24 @@ export default function TokenSaleCard({ project, hash }: { project: ProjectData;
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>
-                Raised: <b>{parseFloat(raisedEth.toString()).toFixed(2)} ETH</b>
-              </span>
-              <span>
-                Goal: <b>{ethMaxCap.toString()} ETH</b>
-              </span>
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading token sale data...</p>
+          ) : error ? (
+            <p className="text-sm text-red-500">{error}</p>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>
+                  Raised: <b>{raisedEth.toFixed(2)} ETH</b>
+                </span>
+                <span>
+                  Goal: <b>{ethMaxCap.toFixed(2)} ETH</b>
+                </span>
+              </div>
+              <Progress value={progress} className="h-2" />
+              <div className="text-xs text-right text-muted-foreground">{progress.toFixed(2)}% Complete</div>
             </div>
-            <Progress value={parseFloat(progress.toString())} className="h-2" />
-            <div className="text-xs text-right text-muted-foreground">{progress.toFixed(2)}% Complete</div>
-          </div>
+          )}
 
           <Separator />
 
